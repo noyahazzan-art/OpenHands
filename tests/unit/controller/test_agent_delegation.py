@@ -459,7 +459,13 @@ async def test_delegate_hits_global_limits(
     message_action._source = EventSource.USER
 
     await delegate_controller._on_event(message_action)
-    await asyncio.sleep(0.1)
+
+    # The event pipeline is asynchronous (RecallAction → Memory → RecallObservation
+    # → parent forwarding → delegate step), so poll until the expected state is reached.
+    for _ in range(50):
+        if delegate_controller.state.agent_state == AgentState.ERROR:
+            break
+        await asyncio.sleep(0.1)
 
     assert delegate_controller.state.agent_state == AgentState.ERROR
     assert (
@@ -468,7 +474,11 @@ async def test_delegate_hits_global_limits(
     )
 
     await delegate_controller.set_agent_state_to(AgentState.RUNNING)
-    await asyncio.sleep(0.1)
+
+    for _ in range(50):
+        if delegate_controller.state.iteration_flag.max_value == 6:
+            break
+        await asyncio.sleep(0.1)
 
     assert delegate_controller.state.iteration_flag.max_value == 6
     assert (
@@ -479,7 +489,11 @@ async def test_delegate_hits_global_limits(
     message_action = MessageAction(content='Test message 2')
     message_action._source = EventSource.USER
     await delegate_controller._on_event(message_action)
-    await asyncio.sleep(0.1)
+
+    for _ in range(50):
+        if delegate_controller.state.iteration_flag.current_value == 4:
+            break
+        await asyncio.sleep(0.1)
 
     assert delegate_controller.state.iteration_flag.current_value == 4
     assert (
