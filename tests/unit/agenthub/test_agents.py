@@ -150,7 +150,6 @@ def test_cmd_run_tool():
     assert 'security_risk' in CmdRunTool['function']['parameters']['properties']
     assert CmdRunTool['function']['parameters']['required'] == [
         'command',
-        'security_risk',
     ]
 
 
@@ -161,7 +160,6 @@ def test_ipython_tool():
     assert 'security_risk' in IPythonTool['function']['parameters']['properties']
     assert IPythonTool['function']['parameters']['required'] == [
         'code',
-        'security_risk',
     ]
 
 
@@ -179,7 +177,6 @@ def test_llm_based_file_edit_tool():
     assert LLMBasedFileEditTool['function']['parameters']['required'] == [
         'path',
         'content',
-        'security_risk',
     ]
 
 
@@ -200,7 +197,6 @@ def test_str_replace_editor_tool():
     assert StrReplaceEditorTool['function']['parameters']['required'] == [
         'command',
         'path',
-        'security_risk',
     ]
 
 
@@ -211,7 +207,6 @@ def test_browser_tool():
     assert 'security_risk' in BrowserTool['function']['parameters']['properties']
     assert BrowserTool['function']['parameters']['required'] == [
         'code',
-        'security_risk',
     ]
     # Check that the description includes all the functions
     description = _BROWSER_TOOL_DESCRIPTION
@@ -239,7 +234,6 @@ def test_browser_tool():
     assert 'code' in BrowserTool['function']['parameters']['properties']
     assert BrowserTool['function']['parameters']['required'] == [
         'code',
-        'security_risk',
     ]
     assert (
         BrowserTool['function']['parameters']['properties']['code']['type'] == 'string'

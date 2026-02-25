@@ -172,7 +172,7 @@ BrowserTool = ChatCompletionToolParam(
                     'enum': RISK_LEVELS,
                 },
             },
-            'required': ['code', 'security_risk'],
+            'required': ['code'],
         },
     ),
 )
