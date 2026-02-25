@@ -29,3 +29,21 @@ OpenHands is an AI coding assistant with a Python/FastAPI backend (port 3000) an
 - **Frontend unit tests**: `cd frontend && npm run test`
 - **Python unit tests**: `poetry run pytest tests/unit -x --timeout=60`
 - **Frontend build**: `cd frontend && npm run build`
+
+### Local GPU deployment (Proxmox + Windows VM)
+
+A production-ready local deployment runs on the user's Proxmox server:
+
+| Component | Location | Details |
+|-----------|----------|---------|
+| OpenHands | Proxmox (`10.0.0.100:3000`) | Docker container, `ghcr.io/openhands/openhands:main` |
+| Ollama + GPU | Windows VM (`10.0.0.6:11434`) | RTX 4080 SUPER, `qwen2.5:14b` (14.8B params, 9GB VRAM) |
+| NinjaTrader 8 | Windows VM (`10.0.0.6`) | Strategies: `C:\Users\nchma\Documents\NinjaTrader 8\bin\Custom\Strategies` |
+| SSH access | `nchma@10.0.0.6:22` | cmd.exe default shell, sshpass available |
+| Tailscale | `100.83.60.32` (Proxmox) | For remote access |
+
+**Proxmox OpenHands setup:** `/opt/openhands/docker-compose.yml` with `network_mode: host` and `privileged: true`.
+
+**Ollama on Windows:** Started via `C:\start_ollama.bat` which sets `OLLAMA_HOST=0.0.0.0`. Proxmox has a systemd service `ollama-forward` (socat on port 11434) forwarding to Windows.
+
+**`security_risk` fix:** The `security_risk` parameter was made optional in all 5 tool definitions (bash, ipython, str_replace_editor, llm_based_edit, browser) to support local models that don't produce this field.
