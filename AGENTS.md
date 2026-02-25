@@ -72,3 +72,13 @@ docker build -t openhands-app-patched:latest /opt/openhands/app-patch/
 Systemd services on Proxmox:
 - `ollama-forward.service`: socat forwarding port 11434 to Windows VM (10.0.0.6:11434)
 - `openhands-redirect.service`: socat forwarding port 3001 to localhost:3000
+
+### Current LLM Configuration
+
+**Primary (DeepSeek API):** `deepseek/deepseek-chat` via `https://api.deepseek.com`
+- Hebrew: excellent, Tool calling: excellent, Speed: 2-5s, Cost: ~$2/month
+
+**Fallback (Local GPU):** `ollama/qwen3:14b` via `http://10.0.0.6:11434`
+- Hebrew: good, Tool calling: good, Speed: 5-20s, Cost: free (RTX 4080 SUPER)
+
+To switch: update settings at `http://10.0.0.100:3001` Settings page.
