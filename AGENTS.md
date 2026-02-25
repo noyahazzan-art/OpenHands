@@ -47,3 +47,28 @@ A production-ready local deployment runs on the user's Proxmox server:
 **Ollama on Windows:** Started via `C:\start_ollama.bat` which sets `OLLAMA_HOST=0.0.0.0`. Proxmox has a systemd service `ollama-forward` (socat on port 11434) forwarding to Windows.
 
 **`security_risk` fix:** The `security_risk` parameter was made optional in all 5 tool definitions (bash, ipython, str_replace_editor, llm_based_edit, browser) to support local models that don't produce this field.
+
+### Proxmox runtime patches
+
+The Proxmox kernel's AppArmor policy blocks `socket.socketpair()` and Unix socket creation in unprivileged Docker containers. The following patches are applied via custom Docker images:
+
+**App image (`openhands-app-patched`):**
+- Injects `security_opt=["apparmor=unconfined", "seccomp=unconfined"]` into sandbox container creation at `docker_runtime.py` line 548.
+
+**Runtime image (`openhands-runtime-patched`):**
+- `async_utils.py`: `GENERAL_TIMEOUT` increased from 15 to 300 seconds.
+- `selector_events.py`: Replaced `socket.socketpair()` with TCP localhost connection for event loop self-pipe (works without AppArmor exceptions).
+- `plugins/jupyter/__init__.py`: Replaced with no-op stub (Jupyter kernel startup hangs in restricted Docker).
+- `plugins/vscode/__init__.py`: Replaced with no-op stub (VSCode server startup hangs in restricted Docker).
+- `INIT_PLUGIN_TIMEOUT` env var set to 300.
+
+Build commands on Proxmox:
+```bash
+cd /opt/openhands/runtime-patch
+docker build -t openhands-runtime-patched:latest .
+docker build -t openhands-app-patched:latest /opt/openhands/app-patch/
+```
+
+Systemd services on Proxmox:
+- `ollama-forward.service`: socat forwarding port 11434 to Windows VM (10.0.0.6:11434)
+- `openhands-redirect.service`: socat forwarding port 3001 to localhost:3000
