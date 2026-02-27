@@ -7,6 +7,11 @@ BACKEND_PORT ?= 3000
 BACKEND_HOST_PORT = "$(BACKEND_HOST):$(BACKEND_PORT)"
 FRONTEND_HOST ?= "127.0.0.1"
 FRONTEND_PORT ?= 3001
+# Optional proxy: HTTP_PROXY=http://proxy:8080 HTTPS_PROXY=http://proxy:8080 make run
+# NO_PROXY=localhost,127.0.0.1 to bypass proxy for local connections
+HTTP_PROXY ?=
+HTTPS_PROXY ?=
+NO_PROXY ?=
 DEFAULT_WORKSPACE_DIR = "./workspace"
 DEFAULT_MODEL = "gpt-4o"
 CONFIG_FILE = config.toml
@@ -265,7 +270,8 @@ build-frontend:
 # Start backend
 start-backend:
 	@echo "$(YELLOW)Starting backend...$(RESET)"
-	@poetry run uvicorn openhands.server.listen:app --host $(BACKEND_HOST) --port $(BACKEND_PORT) --reload --reload-exclude "./workspace"
+	@HTTP_PROXY="$(HTTP_PROXY)" HTTPS_PROXY="$(HTTPS_PROXY)" NO_PROXY="$(NO_PROXY)" \
+	poetry run uvicorn openhands.server.listen:app --host $(BACKEND_HOST) --port $(BACKEND_PORT) --reload --reload-exclude "./workspace"
 
 # Start frontend
 start-frontend:
@@ -277,13 +283,15 @@ start-frontend:
 	else \
 		SCRIPT=dev; \
 	fi; \
+	HTTP_PROXY="$(HTTP_PROXY)" HTTPS_PROXY="$(HTTPS_PROXY)" NO_PROXY="$(NO_PROXY)" \
 	VITE_BACKEND_HOST=$(BACKEND_HOST_PORT) VITE_FRONTEND_PORT=$(FRONTEND_PORT) npm run $$SCRIPT -- --port $(FRONTEND_PORT) --host $(BACKEND_HOST)
 
 # Common setup for running the app (non-callable)
 _run_setup:
 	@mkdir -p logs
 	@echo "$(YELLOW)Starting backend server...$(RESET)"
-	@poetry run uvicorn openhands.server.listen:app --host $(BACKEND_HOST) --port $(BACKEND_PORT) &
+	@HTTP_PROXY="$(HTTP_PROXY)" HTTPS_PROXY="$(HTTPS_PROXY)" NO_PROXY="$(NO_PROXY)" \
+	poetry run uvicorn openhands.server.listen:app --host $(BACKEND_HOST) --port $(BACKEND_PORT) &
 	@echo "$(YELLOW)Waiting for the backend to start...$(RESET)"
 	@until nc -z localhost $(BACKEND_PORT); do sleep 0.1; done
 	@echo "$(GREEN)Backend started successfully.$(RESET)"

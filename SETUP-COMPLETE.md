@@ -63,7 +63,8 @@ poetry run pre-commit run --all-files --config ./dev_config/python/.pre-commit-c
 ### Vite Dev Server (Frontend)
 - **VITE_BACKEND_HOST**: Backend address for proxy (default: `127.0.0.1:3000`)
 - Proxy routes: `/api` → backend API, `/ws` → WebSocket, `/socket.io` → Socket.IO, `/sockets` → V1 WebSocket
-- Behind corporate proxy: Set `HTTP_PROXY`/`HTTPS_PROXY` env vars; Node respects these
+- **Corporate proxy**: `HTTP_PROXY=http://proxy:8080 HTTPS_PROXY=http://proxy:8080 make run`
+- Or add to `frontend/.env`: `HTTP_PROXY`, `HTTPS_PROXY`, `NO_PROXY=localhost,127.0.0.1`
 
 ### Docker / Sandbox (Backend)
 - **config.toml** `[sandbox]` section:
