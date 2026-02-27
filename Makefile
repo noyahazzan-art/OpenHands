@@ -357,6 +357,24 @@ setup-config-basic:
 	> config.toml
 	@echo "$(GREEN)config.toml created.$(RESET)"
 
+# Verify setup: config, workspace, logs, frontend build
+verify:
+	@echo "$(YELLOW)Verifying setup...$(RESET)"
+	@test -f config.toml || (echo "$(RED)Missing config.toml - run: make setup-config-basic$(RESET)" && exit 1)
+	@mkdir -p workspace logs
+	@test -d frontend/build || (echo "$(RED)Missing frontend/build - run: make build-frontend$(RESET)" && exit 1)
+	@echo "$(GREEN)✓ config.toml$(RESET)"
+	@echo "$(GREEN)✓ workspace/ logs/$(RESET)"
+	@echo "$(GREEN)✓ frontend/build$(RESET)"
+	@echo "$(GREEN)Setup verified.$(RESET)"
+
+# Ensure all setup (config, dirs, build) - idempotent
+setup-all:
+	@if [ ! -f config.toml ]; then $(MAKE) -s setup-config-basic; fi
+	@mkdir -p workspace logs
+	@if [ ! -d frontend/build ]; then $(MAKE) -s build-frontend; fi
+	@echo "$(GREEN)Setup complete.$(RESET)"
+
 openhands-cloud-run:
 	@$(MAKE) run BACKEND_HOST="0.0.0.0" BACKEND_PORT="12000" FRONTEND_HOST="0.0.0.0" FRONTEND_PORT="12001"
 
@@ -392,6 +410,8 @@ help:
 	@echo "  $(GREEN)setup-venv$(RESET)          - Create in-project .venv (for IDE/Pyright). Use for local development."
 	@echo "  $(GREEN)setup-config$(RESET)        - Setup the configuration for OpenHands by providing LLM API key,"
 	@echo "                        LLM Model name, and workspace directory."
+	@echo "  $(GREEN)setup-all$(RESET)           - Ensure config, workspace, logs, and frontend build exist."
+	@echo "  $(GREEN)verify$(RESET)             - Verify setup (config, workspace, frontend build)."
 	@echo "  $(GREEN)start-backend$(RESET)       - Start the backend server for the OpenHands project."
 	@echo "  $(GREEN)start-frontend$(RESET)      - Start the frontend server for the OpenHands project."
 	@echo "  $(GREEN)run$(RESET)                 - Run the OpenHands application, starting both backend and frontend servers."
@@ -402,5 +422,5 @@ help:
 	@echo "  $(GREEN)help$(RESET)                - Display this help message, providing information on available targets."
 
 # Phony targets
-.PHONY: build check-dependencies check-system check-python check-npm check-nodejs check-docker check-poetry setup-venv install-python-dependencies install-frontend-dependencies install-pre-commit-hooks lint-backend lint-frontend lint test-frontend test-backend test build-frontend start-backend start-frontend _run_setup run run-wsl setup-config setup-config-prompts setup-config-basic openhands-cloud-run deploy-google-cloud docker-dev docker-run clean help
+.PHONY: build check-dependencies check-system check-python check-npm check-nodejs check-docker check-poetry setup-venv install-python-dependencies install-frontend-dependencies install-pre-commit-hooks lint-backend lint-frontend lint test-frontend test-backend test build-frontend start-backend start-frontend _run_setup run run-wsl setup-config setup-config-prompts setup-config-basic setup-all verify openhands-cloud-run deploy-google-cloud docker-dev docker-run clean help
 .PHONY: kind

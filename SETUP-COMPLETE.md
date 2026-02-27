@@ -5,6 +5,8 @@ This document summarizes the development environment setup and known configurati
 ## Quick Start
 
 ```bash
+make setup-all    # One-time: config, workspace, dirs, frontend build
+make verify       # Verify setup
 make run          # Start backend (3000) + frontend (3001)
 make start-backend   # Backend only
 make start-frontend  # Frontend only
