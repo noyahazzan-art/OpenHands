@@ -36,9 +36,9 @@
 
 ## בענן (GitHub Codespaces / Dev Container / Cursor)
 
-1. **פתח את הפרויקט ב-Dev Container**  
-   - ב-Cursor: **Dev Containers: Reopen in Container**  
-   - ב-VS Code: **Reopen in Container**  
+1. **פתח את הפרויקט ב-Dev Container**
+   - ב-Cursor: **Dev Containers: Reopen in Container**
+   - ב-VS Code: **Reopen in Container**
    - ה-Container מריץ אוטומטית את `.devcontainer/setup.sh`.
 
 2. **מה ה-setup עושה**
@@ -53,8 +53,8 @@
    - אין צורך ב-`extraPaths` / `stubPath` — הוגדרו ב-`.vscode/settings.json` רק נתיב ה-interpreter.
 
 4. **טסטים**
-   - `make test` — בקאנד + פרונט  
-   - `make test-backend` — `poetry run pytest tests/`  
+   - `make test` — בקאנד + פרונט
+   - `make test-backend` — `poetry run pytest tests/`
    - טסטי E2E עם Playwright רצים רק כשמריצים דרך Poetry (יש skip אם playwright לא מותקן).
 
 ---
@@ -121,11 +121,12 @@ make run
 
 | בעיה | פתרון |
 |------|-------|
-| Pyright איטי / "Enumeration taking longer than 10s" | וודא `pyrightconfig.json` (exclude) ו-`python.analysis.diagnosticMode: openFilesOnly` ב-settings.json |
+| Pyright איטי / Enumeration >10s | פתח **רק** את תיקיית OpenHands. וודא `pyrightconfig.json`, `files.exclude`, `python.analysis.diagnosticMode: openFilesOnly` |
 | `stubPath is not a valid directory` | הרץ `make setup-venv`; בחר `.venv/bin/python` כ-interpreter |
 | Frontend build חסר | `cd frontend && npm run build` |
 | Backend crash על startup | וודא `frontend/build` קיים לפני `make start-backend` |
-| Agent Execution Timed Out | Reload Window (Ctrl+Shift+P → Developer: Reload Window); פתח תיקיית פרויקט בלבד |
+| Agent Execution Timed Out | Reload Window; פתח תיקיית פרויקט בלבד |
+| Failed to push / GitHub auth | `gh auth login` או SSH key. ב-Windows: Settings → Accounts → GitHub |
 
 ---
 

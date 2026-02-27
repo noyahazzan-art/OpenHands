@@ -13,7 +13,7 @@ OpenHands is an AI coding assistant with a Python/FastAPI backend (port 3000) an
 | Backend (FastAPI/Uvicorn) | 3000 | `make start-backend` |
 | Frontend (Vite/React Router) | 3001 | `make start-frontend` |
 
-With `make run`: backend serves API on 3000; frontend dev server on 3001. Open http://localhost:3001 in the browser.
+With `make run`: backend on 3000, frontend dev on 3001. Open http://localhost:3001 in the browser. Or run backend only: http://localhost:3000 serves the built frontend.
 
 ### Quick start
 

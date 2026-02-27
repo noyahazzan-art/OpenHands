@@ -11,6 +11,9 @@ import warnings
 from contextlib import asynccontextmanager
 from typing import AsyncIterator
 
+# Suppress RequestsDependencyWarning (urllib3/chardet version mismatch - benign)
+warnings.filterwarnings('ignore', message=r".*doesn't match a supported version!.*", module='requests')
+
 from fastapi.routing import Mount
 
 with warnings.catch_warnings():

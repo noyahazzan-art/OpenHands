@@ -27,13 +27,28 @@ if (-not (Test-Path "frontend\build\index.html")) {
 # Create logs dir
 New-Item -ItemType Directory -Force -Path "logs" | Out-Null
 
+# Enable logging to file (openhands.log in logs/) unless already set
+$LogToFile = if ($env:LOG_TO_FILE) { $env:LOG_TO_FILE } else { "true" }
+
+# Check if backend port is in use
+$portInUse = Get-NetTCPConnection -LocalPort $BackendPort -State Listen -ErrorAction SilentlyContinue
+if ($portInUse) {
+    $pid = ($portInUse | Select-Object -First 1).OwningProcess
+    $proc = Get-Process -Id $pid -ErrorAction SilentlyContinue
+    Write-Host "Port $BackendPort is already in use by PID $pid ($($proc.ProcessName))." -ForegroundColor Red
+    Write-Host "Stop it with: Stop-Process -Id $pid -Force" -ForegroundColor Yellow
+    Write-Host "Or run with a different port: .\scripts\run-windows.ps1 -BackendPort 3002" -ForegroundColor Yellow
+    exit 1
+}
+
 # Start backend in background
 Write-Host "Starting backend server..." -ForegroundColor Yellow
 $backendJob = Start-Job -ScriptBlock {
-    param($backendHostParam, $backendPortParam)
+    param($backendHostParam, $backendPortParam, $logToFile)
     Set-Location $using:ProjectRoot
+    $env:LOG_TO_FILE = $logToFile
     poetry run uvicorn openhands.server.listen:app --host $backendHostParam --port $backendPortParam
-} -ArgumentList $BackendHost, $BackendPort
+} -ArgumentList $BackendHost, $BackendPort, $LogToFile
 
 # Wait for backend to be ready
 Write-Host "Waiting for backend to start..." -ForegroundColor Yellow

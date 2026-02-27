@@ -2,6 +2,18 @@
     // Docker path for Dev Containers on Windows. Adjust if Docker is installed elsewhere.
     "devcontainers.dockerPath": "C:\\Program Files\\Docker\\Docker\\resources\\bin\\docker.exe",
     "remote.containers.dockerPath": "C:\\Program Files\\Docker\\Docker\\resources\\bin\\docker.exe",
+    "files.exclude": {
+        "**/node_modules": true,
+        "**/.git": true,
+        "**/.venv": true,
+        "**/frontend/build": true,
+        "**/__pycache__": true,
+        "**/.pytest_cache": true,
+        "**/.ruff_cache": true,
+        "**/.mypy_cache": true,
+        "**/logs": true,
+        "**/workspace": true
+    },
     // force *nix line endings so files don't look modified in container run from Windows clone
     "files.eol": "\n",
     "files.trimTrailingWhitespace": true,
