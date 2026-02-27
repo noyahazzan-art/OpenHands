@@ -22,7 +22,7 @@
 
 1. לחץ ימני על `scripts\install-all-windows.ps1`
 2. בחר **Run with PowerShell**
-3. אם מופיעה אזהרה – בחר "Run anyway" או הפעל קודם:  
+3. אם מופיעה אזהרה – בחר "Run anyway" או הפעל קודם:
    `Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser`
 4. אם נדרש – הפעל מחדש את המחשב והרץ את הסקריפט שוב עד ש-Docker מותקן.
 
