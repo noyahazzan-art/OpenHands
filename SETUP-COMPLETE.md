@@ -58,6 +58,23 @@ cd frontend && npm run lint
 poetry run pre-commit run --all-files --config ./dev_config/python/.pre-commit-config.yaml
 ```
 
+## Proxy Configuration
+
+### Vite Dev Server (Frontend)
+- **VITE_BACKEND_HOST**: Backend address for proxy (default: `127.0.0.1:3000`)
+- Proxy routes: `/api` → backend API, `/ws` → WebSocket, `/socket.io` → Socket.IO
+- Behind corporate proxy: Set `HTTP_PROXY`/`HTTPS_PROXY` env vars; Node respects these
+
+### Docker / Sandbox (Backend)
+- **config.toml** `[sandbox]` section:
+  - `runtime_extra_build_args`: Pass `--build-arg http_proxy=...` for Docker image build
+  - `runtime_startup_env_vars`: Set `HTTP_PROXY`/`HTTPS_PROXY` for runtime containers
+- Example: `runtime_extra_build_args = ["--build-arg", "http_proxy=http://proxy:8080"]`
+
+### LLM API (LiteLLM Proxy)
+- Use `litellm_proxy/` model prefix with `base_url` for LiteLLM proxy
+- See config.template.toml for `[llm]` options
+
 ## Known Limitations
 
 1. **Docker in nested containers**: Use host Docker or native environment for full agent functionality
