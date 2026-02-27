@@ -135,3 +135,17 @@ chmod 644 ~/.ssh/id_ed25519.pub
 # Set correct permissions for SSH directory
 chmod 700 ~/.ssh
 ```
+
+## Git over SSH
+
+For cloning private repos via SSH instead of HTTPS:
+
+```bash
+# Use SSH URL format
+git clone git@github.com:owner/repo.git
+
+# If using custom key
+GIT_SSH_COMMAND="ssh -i ~/.ssh/my_key -o IdentitiesOnly=yes" git clone git@github.com:owner/repo.git
+```
+
+Ensure SSH keys are available in the workspace (e.g. via volume mount or `~/.ssh` in sandbox).

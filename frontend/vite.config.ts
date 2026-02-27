@@ -97,7 +97,12 @@ export default defineConfig(({ mode }) => {
           ws: true,
           changeOrigin: true,
           secure: !INSECURE_SKIP_VERIFY,
-          // rewriteWsOrigin: true,
+        },
+        "/sockets": {
+          target: WS_URL,
+          ws: true,
+          changeOrigin: true,
+          secure: !INSECURE_SKIP_VERIFY,
         },
       },
       watch: {

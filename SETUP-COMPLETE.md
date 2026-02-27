@@ -62,7 +62,7 @@ poetry run pre-commit run --all-files --config ./dev_config/python/.pre-commit-c
 
 ### Vite Dev Server (Frontend)
 - **VITE_BACKEND_HOST**: Backend address for proxy (default: `127.0.0.1:3000`)
-- Proxy routes: `/api` → backend API, `/ws` → WebSocket, `/socket.io` → Socket.IO
+- Proxy routes: `/api` → backend API, `/ws` → WebSocket, `/socket.io` → Socket.IO, `/sockets` → V1 WebSocket
 - Behind corporate proxy: Set `HTTP_PROXY`/`HTTPS_PROXY` env vars; Node respects these
 
 ### Docker / Sandbox (Backend)
@@ -74,6 +74,24 @@ poetry run pre-commit run --all-files --config ./dev_config/python/.pre-commit-c
 ### LLM API (LiteLLM Proxy)
 - Use `litellm_proxy/` model prefix with `base_url` for LiteLLM proxy
 - See config.template.toml for `[llm]` options
+
+## SSH Connection
+
+### Git over SSH
+- **Default**: OpenHands uses HTTPS URLs with provider tokens (GitHub, GitLab, etc.)
+- **SSH clone**: For `git@github.com:user/repo.git`, ensure SSH keys are available in the sandbox:
+  - Mount `~/.ssh` via `[sandbox] volumes` in config.toml
+  - Or use `runtime_startup_env_vars` to set `GIT_SSH_COMMAND` if needed
+- **SSH Microagent**: See `skills/ssh.md` for agent capabilities (ssh, scp, ssh-keygen, etc.)
+
+### Sandbox SSH Access
+- Mount host SSH config: `volumes = "/home/user/.ssh:/workspace/.ssh:ro"`
+- Or copy keys into workspace before agent runs (less secure)
+
+### Troubleshooting SSH
+- `ssh -vvv user@host` for verbose debug
+- `chmod 600 ~/.ssh/id_*` for private keys
+- `ssh-keygen -R hostname` to fix changed host keys
 
 ## Known Limitations
 
