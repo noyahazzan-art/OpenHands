@@ -1,5 +1,6 @@
 import logging
 import os
+import sys
 from io import StringIO
 
 import pytest
@@ -639,6 +640,10 @@ def test_workspace_mount_path_default(default_config):
     )
 
 
+@pytest.mark.skipif(
+    sys.platform == 'win32',
+    reason='workspace_mount_rewrite uses Unix path semantics',
+)
 def test_workspace_mount_rewrite(default_config, monkeypatch):
     default_config.workspace_base = '/home/user/project'
     default_config.workspace_mount_rewrite = '/home/user:/sandbox'
@@ -657,9 +662,10 @@ def test_sandbox_volumes_with_workspace(default_config):
     """Test that sandbox.volumes with explicit /workspace mount works correctly."""
     default_config.sandbox.volumes = '/home/user/mydir:/workspace:rw,/data:/data:ro'
     finalize_config(default_config)
-    assert default_config.workspace_mount_path == '/home/user/mydir'
+    expected_path = os.path.abspath('/home/user/mydir')
+    assert default_config.workspace_mount_path == expected_path
     assert default_config.workspace_mount_path_in_sandbox == '/workspace'
-    assert default_config.workspace_base == '/home/user/mydir'
+    assert default_config.workspace_base == expected_path
 
 
 def test_sandbox_volumes_without_workspace(default_config):
@@ -679,9 +685,9 @@ def test_sandbox_volumes_with_workspace_not_first(default_config):
         '/data:/data:ro,/home/user/mydir:/workspace:rw,/models:/models:ro'
     )
     finalize_config(default_config)
-    assert default_config.workspace_mount_path == '/home/user/mydir'
+    assert default_config.workspace_mount_path == os.path.abspath('/home/user/mydir')
     assert default_config.workspace_mount_path_in_sandbox == '/workspace'
-    assert default_config.workspace_base == '/home/user/mydir'
+    assert default_config.workspace_base == os.path.abspath('/home/user/mydir')
 
 
 def test_agent_config_condenser_with_no_enabled():
@@ -708,9 +714,9 @@ timeout = 1
         default_config.sandbox.volumes
         == '/home/user/mydir:/workspace:rw,/data:/data:ro'
     )
-    assert default_config.workspace_mount_path == '/home/user/mydir'
+    assert default_config.workspace_mount_path == os.path.abspath('/home/user/mydir')
     assert default_config.workspace_mount_path_in_sandbox == '/workspace'
-    assert default_config.workspace_base == '/home/user/mydir'
+    assert default_config.workspace_base == os.path.abspath('/home/user/mydir')
     assert default_config.sandbox.timeout == 1
 
 

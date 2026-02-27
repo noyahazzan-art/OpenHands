@@ -1,3 +1,4 @@
+import sys
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -68,6 +69,10 @@ api_key = "current-dir-specific-api-key"
 
 
 @patch('openhands.core.config.utils.os.path.expanduser')
+@pytest.mark.skipif(
+    sys.platform == 'win32',
+    reason='setup_config_from_args triggers .NET/PowerShell load on Windows',
+)
 def test_llm_config_precedence_cli_highest(mock_expanduser, temp_config_files):
     """Test that CLI parameters have the highest precedence."""
     mock_expanduser.side_effect = lambda path: path.replace(
@@ -96,6 +101,10 @@ def test_llm_config_precedence_cli_highest(mock_expanduser, temp_config_files):
 
 
 @patch('openhands.core.config.utils.os.path.expanduser')
+@pytest.mark.skipif(
+    sys.platform == 'win32',
+    reason='setup_config_from_args triggers .NET/PowerShell load on Windows',
+)
 def test_current_dir_toml_precedence_over_user_config(
     mock_expanduser, temp_config_files
 ):
@@ -123,6 +132,10 @@ def test_current_dir_toml_precedence_over_user_config(
 
 
 @patch('openhands.core.config.utils.os.path.expanduser')
+@pytest.mark.skipif(
+    sys.platform == 'win32',
+    reason='get_llm_config_arg triggers .NET/PowerShell load on Windows',
+)
 def test_get_llm_config_arg_precedence(mock_expanduser, temp_config_files):
     """Test that get_llm_config_arg prioritizes the specified config file."""
     mock_expanduser.side_effect = lambda path: path.replace(

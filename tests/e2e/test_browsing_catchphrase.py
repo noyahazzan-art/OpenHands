@@ -7,13 +7,23 @@ is emitted and that the agent returns the expected catchphrase.
 
 This follows existing patterns from tests/e2e/test_conversation.py and
 uses robust waits and screenshots.
+
+Run with Poetry so playwright is available: poetry run pytest tests/e2e/test_browsing_catchphrase.py -v
 """
 
 import os
 import re
 import time
 
-from playwright.sync_api import Page, expect
+import pytest
+
+try:
+    from playwright.sync_api import Page, expect
+except ImportError:
+    pytest.skip(
+        "playwright not installed; run with: poetry run pytest tests/e2e/test_browsing_catchphrase.py -v",
+        allow_module_level=True,
+    )
 
 CATCHPHRASE_PATTERNS = [
     r'\bcode\s*less\W*make\s*more\b',

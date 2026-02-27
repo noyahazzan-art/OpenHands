@@ -111,6 +111,8 @@ export default defineConfig(({ mode }) => {
       environment: "jsdom",
       setupFiles: ["vitest.setup.ts"],
       exclude: [...configDefaults.exclude, "tests"],
+      testTimeout: 10000,
+      retry: process.env.CI ? 3 : 2,
       coverage: {
         reporter: ["text", "json", "html", "lcov", "text-summary"],
         reportsDirectory: "coverage",

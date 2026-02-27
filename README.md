@@ -83,4 +83,6 @@ You might also be interested in our [evaluation infrastructure](https://github.c
 All our work is available under the MIT license, except for the `enterprise/` directory in this repository (see the [enterprise license](enterprise/LICENSE) for details).
 The core `openhands` and `agent-server` Docker images are fully MIT-licensed as well.
 
+**Developing on this repo?** See [Development.md](Development.md) and the short [DEV-SETUP.md](DEV-SETUP.md) (Dev Container + local setup).
+
 If you need help with anything, or just want to chat, [come find us on Slack](https://dub.sh/openhands).

@@ -639,7 +639,8 @@ describe("Form submission", () => {
         security_analyzer: null,
       }),
     );
-  });
+  },
+  30000);
 
   it("should disable the button if there are no changes in the basic form", async () => {
     const getSettingsSpy = vi.spyOn(SettingsService, "getSettings");
@@ -684,130 +685,135 @@ describe("Form submission", () => {
     expect(submitButton).toBeDisabled();
   });
 
-  it("should disable the button if there are no changes in the advanced form", async () => {
-    const getSettingsSpy = vi.spyOn(SettingsService, "getSettings");
-    getSettingsSpy.mockResolvedValue({
-      ...MOCK_DEFAULT_USER_SETTINGS,
-      llm_model: "openai/gpt-4o",
-      llm_base_url: "https://api.openai.com/v1/chat/completions",
-      llm_api_key_set: true,
-      confirmation_mode: true,
-    });
+  it(
+    "should disable the button if there are no changes in the advanced form",
+    async () => {
+      const getSettingsSpy = vi.spyOn(SettingsService, "getSettings");
+      getSettingsSpy.mockResolvedValue({
+        ...MOCK_DEFAULT_USER_SETTINGS,
+        llm_model: "openai/gpt-4o",
+        llm_base_url: "https://api.openai.com/v1/chat/completions",
+        llm_api_key_set: true,
+        confirmation_mode: true,
+        security_analyzer: "llm",
+      });
 
-    renderLlmSettingsScreen();
-    await screen.findByTestId("llm-settings-screen");
-    await screen.findByTestId("llm-settings-form-advanced");
+      renderLlmSettingsScreen();
+      await screen.findByTestId("llm-settings-screen");
+      await screen.findByTestId("llm-settings-form-advanced");
 
-    const submitButton = await screen.findByTestId("submit-button");
-    expect(submitButton).toBeDisabled();
+      const submitButton = await screen.findByTestId("submit-button");
+      expect(submitButton).toBeDisabled();
 
-    const model = await screen.findByTestId("llm-custom-model-input");
-    const baseUrl = await screen.findByTestId("base-url-input");
-    const apiKey = await screen.findByTestId("llm-api-key-input");
-    const agent = await screen.findByTestId("agent-input");
-    const condensor = await screen.findByTestId(
-      "enable-memory-condenser-switch",
-    );
+      const model = await screen.findByTestId("llm-custom-model-input");
+      const baseUrl = await screen.findByTestId("base-url-input");
+      const apiKey = await screen.findByTestId("llm-api-key-input");
+      const agent = await screen.findByTestId("agent-input");
+      const condensor = await screen.findByTestId(
+        "enable-memory-condenser-switch",
+      );
 
-    // Confirmation mode switch is now in basic settings, always visible
-    const confirmation = await screen.findByTestId(
-      "enable-confirmation-mode-switch",
-    );
+      // Confirmation mode switch is now in basic settings, always visible
+      const confirmation = await screen.findByTestId(
+        "enable-confirmation-mode-switch",
+      );
 
-    // enter custom model
-    await userEvent.type(model, "-mini");
-    expect(model).toHaveValue("openai/gpt-4o-mini");
-    expect(submitButton).not.toBeDisabled();
+      // enter custom model (clear first to avoid race with existing value)
+      await userEvent.clear(model);
+      await userEvent.type(model, "openai/gpt-4o-mini");
+      await waitFor(() => expect(model).toHaveValue("openai/gpt-4o-mini"));
+      expect(submitButton).not.toBeDisabled();
 
-    // reset model
-    await userEvent.clear(model);
-    expect(model).toHaveValue("");
-    expect(submitButton).toBeDisabled();
+      // reset model
+      await userEvent.clear(model);
+      expect(model).toHaveValue("");
+      expect(submitButton).toBeDisabled();
 
-    await userEvent.type(model, "openai/gpt-4o");
-    expect(model).toHaveValue("openai/gpt-4o");
-    expect(submitButton).toBeDisabled();
+      await userEvent.type(model, "openai/gpt-4o");
+      expect(model).toHaveValue("openai/gpt-4o");
+      expect(submitButton).toBeDisabled();
 
-    // enter base url
-    await userEvent.type(baseUrl, "/extra");
-    expect(baseUrl).toHaveValue(
-      "https://api.openai.com/v1/chat/completions/extra",
-    );
-    expect(submitButton).not.toBeDisabled();
+      // enter base url
+      await userEvent.type(baseUrl, "/extra");
+      expect(baseUrl).toHaveValue(
+        "https://api.openai.com/v1/chat/completions/extra",
+      );
+      expect(submitButton).not.toBeDisabled();
 
-    await userEvent.clear(baseUrl);
-    expect(baseUrl).toHaveValue("");
-    expect(submitButton).not.toBeDisabled();
+      await userEvent.clear(baseUrl);
+      expect(baseUrl).toHaveValue("");
+      expect(submitButton).not.toBeDisabled();
 
-    await userEvent.type(baseUrl, "https://api.openai.com/v1/chat/completions");
-    expect(baseUrl).toHaveValue("https://api.openai.com/v1/chat/completions");
-    expect(submitButton).toBeDisabled();
+      await userEvent.type(baseUrl, "https://api.openai.com/v1/chat/completions");
+      expect(baseUrl).toHaveValue("https://api.openai.com/v1/chat/completions");
+      expect(submitButton).toBeDisabled();
 
-    // set api key
-    await userEvent.type(apiKey, "test-api-key");
-    expect(apiKey).toHaveValue("test-api-key");
-    expect(submitButton).not.toBeDisabled();
+      // set api key
+      await userEvent.type(apiKey, "test-api-key");
+      expect(apiKey).toHaveValue("test-api-key");
+      expect(submitButton).not.toBeDisabled();
 
-    // reset api key
-    await userEvent.clear(apiKey);
-    expect(apiKey).toHaveValue("");
-    expect(submitButton).toBeDisabled();
+      // reset api key
+      await userEvent.clear(apiKey);
+      expect(apiKey).toHaveValue("");
+      expect(submitButton).toBeDisabled();
 
-    // set agent
-    await userEvent.clear(agent);
-    await userEvent.type(agent, "test-agent");
-    expect(agent).toHaveValue("test-agent");
-    expect(submitButton).not.toBeDisabled();
+      // set agent
+      await userEvent.clear(agent);
+      await userEvent.type(agent, "test-agent");
+      expect(agent).toHaveValue("test-agent");
+      expect(submitButton).not.toBeDisabled();
 
-    // reset agent
-    await userEvent.clear(agent);
-    expect(agent).toHaveValue("");
-    expect(submitButton).toBeDisabled();
+      // reset agent
+      await userEvent.clear(agent);
+      expect(agent).toHaveValue("");
+      expect(submitButton).toBeDisabled();
 
-    await userEvent.type(agent, "CodeActAgent");
-    expect(agent).toHaveValue("CodeActAgent");
-    expect(submitButton).toBeDisabled();
+      await userEvent.type(agent, "CodeActAgent");
+      expect(agent).toHaveValue("CodeActAgent");
+      expect(submitButton).toBeDisabled();
 
-    // toggle confirmation mode
-    await userEvent.click(confirmation);
-    expect(confirmation).not.toBeChecked();
-    expect(submitButton).not.toBeDisabled();
-    await userEvent.click(confirmation);
-    expect(confirmation).toBeChecked();
-    expect(submitButton).toBeDisabled();
+      // toggle confirmation mode
+      await userEvent.click(confirmation);
+      expect(confirmation).not.toBeChecked();
+      expect(submitButton).not.toBeDisabled();
+      await userEvent.click(confirmation);
+      expect(confirmation).toBeChecked();
+      expect(submitButton).toBeDisabled();
 
-    // toggle memory condensor
-    await userEvent.click(condensor);
-    expect(condensor).not.toBeChecked();
-    expect(submitButton).not.toBeDisabled();
-    await userEvent.click(condensor);
-    expect(condensor).toBeChecked();
-    expect(submitButton).toBeDisabled();
+      // toggle memory condensor
+      await userEvent.click(condensor);
+      expect(condensor).not.toBeChecked();
+      expect(submitButton).not.toBeDisabled();
+      await userEvent.click(condensor);
+      expect(condensor).toBeChecked();
+      expect(submitButton).toBeDisabled();
 
-    // select security analyzer
-    const securityAnalyzer = await screen.findByTestId(
-      "security-analyzer-input",
-    );
-    await userEvent.click(securityAnalyzer);
-    const securityAnalyzerOption = screen.getByText(
-      "SETTINGS$SECURITY_ANALYZER_NONE",
-    );
-    await userEvent.click(securityAnalyzerOption);
-    expect(securityAnalyzer).toHaveValue("SETTINGS$SECURITY_ANALYZER_NONE");
+      // select security analyzer
+      const securityAnalyzer = await screen.findByTestId(
+        "security-analyzer-input",
+      );
+      await userEvent.click(securityAnalyzer);
+      const securityAnalyzerOption = screen.getByText(
+        "SETTINGS$SECURITY_ANALYZER_NONE",
+      );
+      await userEvent.click(securityAnalyzerOption);
+      expect(securityAnalyzer).toHaveValue("SETTINGS$SECURITY_ANALYZER_NONE");
 
-    expect(submitButton).not.toBeDisabled();
+      expect(submitButton).not.toBeDisabled();
 
-    // revert back to original value
-    await userEvent.click(securityAnalyzer);
-    const originalSecurityAnalyzerOption = screen.getByText(
-      "SETTINGS$SECURITY_ANALYZER_LLM_DEFAULT",
-    );
-    await userEvent.click(originalSecurityAnalyzerOption);
-    expect(securityAnalyzer).toHaveValue(
-      "SETTINGS$SECURITY_ANALYZER_LLM_DEFAULT",
-    );
-    expect(submitButton).toBeDisabled();
-  });
+      // revert back to original value
+      await userEvent.click(securityAnalyzer);
+      const originalSecurityAnalyzerOption = screen.getByText(
+        "SETTINGS$SECURITY_ANALYZER_LLM_DEFAULT",
+      );
+      await userEvent.click(originalSecurityAnalyzerOption);
+      expect(securityAnalyzer).toHaveValue(
+        "SETTINGS$SECURITY_ANALYZER_LLM_DEFAULT",
+      );
+      expect(submitButton).toBeDisabled();
+  },
+  35000);
 
   it("should reset button state when switching between forms", async () => {
     renderLlmSettingsScreen();

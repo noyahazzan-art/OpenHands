@@ -6,6 +6,8 @@ If you wish to contribute your changes, check out the
 on how to clone and setup the project initially before moving on. Otherwise,
 you can clone the OpenHands project directly.
 
+**Quick reference:** For a short checklist for **Dev Container / cloud** and **local** setup, see [DEV-SETUP.md](DEV-SETUP.md).
+
 ## Start the Server for Development
 
 ### 1. Requirements
@@ -56,6 +58,15 @@ that OpenHands is ready to run on your system:
 ```bash
 make build
 ```
+
+#### Local development (IDE / Pyright)
+
+If you work **locally** (not in the Dev Container) and want the IDE and Pyright to use a single in-project `.venv`:
+
+- **Linux / macOS:** Run `make setup-venv` (or `poetry config virtualenvs.in-project true && poetry install`). The IDE will use `${workspaceFolder}/.venv/bin/python` if set in `.vscode/settings.json`.
+- **Windows:** Run `powershell -ExecutionPolicy Bypass -File scripts/setup-venv-windows.ps1` (see [SETUP-WINDOWS.md](SETUP-WINDOWS.md)). Then use **Python: Select Interpreter** and choose `.venv\Scripts\python.exe`.
+
+This avoids the “stubPath is not a valid directory” warning and keeps analysis fast (see `pyrightconfig.json` for excluded directories).
 
 ### 3. Configuring the Language Model
 
@@ -150,6 +161,18 @@ To run tests, refer to the following:
 ```bash
 poetry run pytest ./tests/unit/test_*.py
 ```
+
+#### E2E tests (require playwright)
+
+Run backend tests (including e2e) with Poetry so dependencies like `playwright` are available:
+
+```bash
+poetry run pytest tests/
+# Or a single e2e test:
+poetry run pytest tests/e2e/test_browsing_catchphrase.py -v
+```
+
+You can also use `make test` to run both backend and frontend tests.
 
 ### 9. Add or update dependency
 

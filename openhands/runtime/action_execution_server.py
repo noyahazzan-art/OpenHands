@@ -78,7 +78,10 @@ from openhands.runtime.utils.system_stats import (
 from openhands.utils.async_utils import call_sync_from_async, wait_all
 
 if sys.platform == 'win32':
-    from openhands.runtime.utils.windows_bash import WindowsPowershellSession
+    try:
+        from openhands.runtime.utils.windows_bash import WindowsPowershellSession
+    except Exception:
+        WindowsPowershellSession = None  # type: ignore[assignment]
 
 
 class ActionRequest(BaseModel):
@@ -268,6 +271,16 @@ class ActionExecutor:
 
     def _create_bash_session(self, cwd: str | None = None):
         if sys.platform == 'win32':
+            if WindowsPowershellSession is None:  # type: ignore[name-defined]
+                from openhands.runtime.utils.windows_exceptions import (
+                    DotNetMissingError,
+                )
+
+                raise DotNetMissingError(
+                    'PowerShell and .NET SDK are required for OpenHands on Windows. '
+                    'See https://docs.all-hands.dev/usage/windows-without-wsl',
+                    details=None,
+                )
             return WindowsPowershellSession(  # type: ignore[name-defined]
                 work_dir=cwd or self._initial_cwd,
                 username=self.username,

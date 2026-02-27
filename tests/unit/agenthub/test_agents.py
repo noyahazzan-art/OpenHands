@@ -1,3 +1,4 @@
+import sys
 from typing import Union
 from unittest.mock import Mock
 
@@ -86,14 +87,17 @@ def test_agent_with_default_config_has_default_tools(create_llm_registry):
     )
     assert len(codeact_agent.tools) > 0
     default_tool_names = [tool['function']['name'] for tool in codeact_agent.tools]
-    assert {
-        'browser',
+    required_tools = {
         'execute_bash',
         'execute_ipython_cell',
         'finish',
         'str_replace_editor',
         'think',
-    }.issubset(default_tool_names)
+    }
+    assert required_tools.issubset(default_tool_names)
+    # browser is not included on Windows (runtime does not support browsing yet)
+    if sys.platform != 'win32':
+        assert 'browser' in default_tool_names
 
 
 @pytest.fixture

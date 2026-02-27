@@ -1,0 +1,30 @@
+{
+  "include": ["openhands", "tests", "scripts", "skills"],
+  "exclude": [
+    "**/node_modules",
+    "**/__pycache__",
+    "**/.git",
+    "**/.venv",
+    "**/.*",
+    "**/.mypy_cache",
+    "**/.pytest_cache",
+    "**/.ruff_cache",
+    "evaluation",
+    "frontend",
+    "third_party",
+    "containers",
+    "kind",
+    "enterprise",
+    "openhands-ui",
+    "openhands-cli",
+    ".devcontainer",
+    ".github",
+    ".openhands",
+    ".mcpower",
+    "dev_config"
+  ],
+  "pythonVersion": "3.12",
+  "typeCheckingMode": "standard",
+  "reportMissingImports": "warning",
+  "reportMissingTypeStubs": "none"
+}

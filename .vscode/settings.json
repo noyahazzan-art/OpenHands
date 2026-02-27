@@ -1,16 +1,25 @@
 {
+    // Docker path for Dev Containers on Windows. Adjust if Docker is installed elsewhere.
+    "devcontainers.dockerPath": "C:\\Program Files\\Docker\\Docker\\resources\\bin\\docker.exe",
+    "remote.containers.dockerPath": "C:\\Program Files\\Docker\\Docker\\resources\\bin\\docker.exe",
     // force *nix line endings so files don't look modified in container run from Windows clone
     "files.eol": "\n",
     "files.trimTrailingWhitespace": true,
     "files.insertFinalNewline": true,
-
-    "python.defaultInterpreterPath": "./.venv/bin/python",
+    "files.watcherExclude": {
+        "**/node_modules": true,
+        "**/.git": true,
+        "**/.venv": true,
+        "**/frontend": true,
+        "**/third_party": true,
+        "**/evaluation": true,
+        "**/poetry.lock": true
+    },
+    "python.defaultInterpreterPath": "${workspaceFolder}/.venv/bin/python",
+    "// Python: אם .venv חסר הרץ make setup-venv. Windows: Select Interpreter -> .venv/Scripts/python.exe",
     "python.terminal.activateEnvironment": true,
     "python.analysis.autoImportCompletions": true,
     "python.analysis.autoSearchPaths": true,
-    "python.analysis.extraPaths": [
-        "./.venv/lib/python3.12/site-packages"
-    ],
     "python.analysis.packageIndexDepths": [
         {
             "name": "openhands",
@@ -18,5 +27,28 @@
             "includeAllSymbols": true
         }
     ],
-    "python.analysis.stubPath": "./.venv/lib/python3.12/site-packages",
+    "cursorpyright.analysis.autoImportCompletions": true,
+    "cursorpyright.analysis.autoSearchPaths": true,
+    "python.analysis.exclude": [
+        "**/node_modules",
+        "**/.git",
+        "**/.venv",
+        "**/__pycache__",
+        "**/frontend",
+        "**/third_party",
+        "**/evaluation",
+        "**/containers",
+        "**/enterprise",
+        "**/openhands-ui",
+        "**/openhands-cli",
+        "**/.devcontainer",
+        "**/.github",
+        "**/.openhands",
+        "**/.mcpower",
+        "**/dev_config",
+        "**/kind",
+        "**/.mypy_cache",
+        "**/.pytest_cache",
+        "**/.ruff_cache"
+    ]
 }

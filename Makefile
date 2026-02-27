@@ -136,6 +136,18 @@ check-poetry:
 		exit 1; \
 	fi
 
+setup-venv:
+	@echo "$(YELLOW)Configuring Poetry to use in-project .venv (for IDE/Pyright)...$(RESET)"
+	@poetry config virtualenvs.in-project true
+	@if [ ! -d ".venv" ]; then \
+		echo "$(YELLOW)Removing cached venv so Poetry creates .venv in project...$(RESET)"; \
+		poetry env remove --all 2>/dev/null || true; \
+		echo "$(YELLOW)Creating .venv and installing dependencies...$(RESET)"; \
+		poetry env use python$(PYTHON_VERSION) && $(MAKE) -s install-python-dependencies; \
+	else \
+		echo "$(GREEN).venv already exists. Run 'make install-python-dependencies' to update.$(RESET)"; \
+	fi
+
 install-python-dependencies:
 	@echo "$(GREEN)Installing Python dependencies...$(RESET)"
 	@if [ -z "${TZ}" ]; then \
@@ -238,7 +250,12 @@ test-frontend:
 	@echo "$(YELLOW)Running tests for frontend...$(RESET)"
 	@cd frontend && npm run test
 
+test-backend:
+	@echo "$(YELLOW)Running backend tests (use Poetry env for full deps e.g. playwright)...$(RESET)"
+	@poetry run pytest tests/ -v --tb=short
+
 test:
+	@$(MAKE) -s test-backend
 	@$(MAKE) -s test-frontend
 
 build-frontend:
@@ -264,10 +281,6 @@ start-frontend:
 
 # Common setup for running the app (non-callable)
 _run_setup:
-	@if [ "$(OS)" = "Windows_NT" ]; then \
-		echo "$(RED) Windows is not supported, use WSL instead!$(RESET)"; \
-		exit 1; \
-	fi
 	@mkdir -p logs
 	@echo "$(YELLOW)Starting backend server...$(RESET)"
 	@poetry run uvicorn openhands.server.listen:app --host $(BACKEND_HOST) --port $(BACKEND_PORT) &
@@ -278,8 +291,13 @@ _run_setup:
 # Run the app (standard mode)
 run:
 	@echo "$(YELLOW)Running the app...$(RESET)"
-	@$(MAKE) -s _run_setup
-	@$(MAKE) -s start-frontend
+	@if [ "$(OS)" = "Windows_NT" ]; then \
+		echo "$(YELLOW)Windows: starting via PowerShell script$(RESET)"; \
+		powershell -ExecutionPolicy Bypass -File scripts/run-windows.ps1; \
+	else \
+		$(MAKE) -s _run_setup; \
+		$(MAKE) -s start-frontend; \
+	fi
 	@echo "$(GREEN)Application started successfully.$(RESET)"
 
 # Run the app (in docker)
@@ -356,6 +374,10 @@ help:
 	@echo "Targets:"
 	@echo "  $(GREEN)build$(RESET)               - Build project, including environment setup and dependencies."
 	@echo "  $(GREEN)lint$(RESET)                - Run linters on the project."
+	@echo "  $(GREEN)test$(RESET)                - Run backend (poetry run pytest) and frontend tests."
+	@echo "  $(GREEN)test-backend$(RESET)        - Run backend tests only (use: poetry run pytest tests/)."
+	@echo "  $(GREEN)test-frontend$(RESET)       - Run frontend tests only."
+	@echo "  $(GREEN)setup-venv$(RESET)          - Create in-project .venv (for IDE/Pyright). Use for local development."
 	@echo "  $(GREEN)setup-config$(RESET)        - Setup the configuration for OpenHands by providing LLM API key,"
 	@echo "                        LLM Model name, and workspace directory."
 	@echo "  $(GREEN)start-backend$(RESET)       - Start the backend server for the OpenHands project."
@@ -367,5 +389,5 @@ help:
 	@echo "  $(GREEN)help$(RESET)                - Display this help message, providing information on available targets."
 
 # Phony targets
-.PHONY: build check-dependencies check-system check-python check-npm check-nodejs check-docker check-poetry install-python-dependencies install-frontend-dependencies install-pre-commit-hooks lint-backend lint-frontend lint test-frontend test build-frontend start-backend start-frontend _run_setup run run-wsl setup-config setup-config-prompts setup-config-basic openhands-cloud-run docker-dev docker-run clean help
+.PHONY: build check-dependencies check-system check-python check-npm check-nodejs check-docker check-poetry setup-venv install-python-dependencies install-frontend-dependencies install-pre-commit-hooks lint-backend lint-frontend lint test-frontend test-backend test build-frontend start-backend start-frontend _run_setup run run-wsl setup-config setup-config-prompts setup-config-basic openhands-cloud-run docker-dev docker-run clean help
 .PHONY: kind

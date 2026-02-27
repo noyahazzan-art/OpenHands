@@ -1,0 +1,11 @@
+// Quick Dev Container - opens fast, NO automatic setup (5-30 min).
+// Use this if "Cursor is setting up..." is stuck for hours.
+// After container opens, run manually: poetry config virtualenvs.in-project true && poetry install
+{
+	"name": "OpenHands (Quick - no setup)",
+	"image": "mcr.microsoft.com/devcontainers/python:1-3.12-bookworm",
+	"features": {
+		"ghcr.io/devcontainers-extra/features/poetry:2": {},
+		"ghcr.io/devcontainers/features/node:1": {}
+	}
+}

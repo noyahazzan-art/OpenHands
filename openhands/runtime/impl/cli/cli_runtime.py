@@ -54,37 +54,19 @@ from openhands.runtime.runtime_status import RuntimeStatus
 if TYPE_CHECKING:
     from openhands.runtime.utils.windows_bash import WindowsPowershellSession
 
-# Import Windows PowerShell support if on Windows
+# Import Windows PowerShell support if on Windows.
+# Defer failure to runtime (connect()) so pytest and other tools can import without .NET.
 if sys.platform == 'win32':
+    WindowsPowershellSession = None  # type: ignore[assignment]
+    _windows_dotnet_error: BaseException | None = None
     try:
         from openhands.runtime.utils.windows_exceptions import DotNetMissingError
         from openhands.runtime.utils.windows_bash import WindowsPowershellSession  # isort: skip
-    except (ImportError, DotNetMissingError) as err:
-        # Print a user-friendly error message without stack trace
-        friendly_message = """
-ERROR: PowerShell and .NET SDK are required but not properly configured
+    except (ImportError, Exception) as err:
+        from openhands.runtime.utils.windows_exceptions import DotNetMissingError
 
-The .NET SDK and PowerShell are required for OpenHands CLI on Windows.
-PowerShell integration cannot function without .NET Core.
-
-Please install the .NET SDK by following the instructions at:
-https://docs.all-hands.dev/usage/windows-without-wsl
-
-After installing .NET SDK, restart your terminal and try again.
-"""
-        print(friendly_message, file=sys.stderr)
-        logger.error(
-            f'Windows runtime initialization failed: {type(err).__name__}: {str(err)}'
-        )
-        if (
-            isinstance(err, DotNetMissingError)
-            and hasattr(err, 'details')
-            and err.details
-        ):
-            logger.debug(f'Details: {err.details}')
-
-        # Exit the program with an error code
-        sys.exit(1)
+        WindowsPowershellSession = None  # type: ignore[assignment]
+        _windows_dotnet_error = err
 
 
 class CLIRuntime(Runtime):
@@ -177,6 +159,13 @@ class CLIRuntime(Runtime):
 
         # Initialize PowerShell session if on Windows
         if self._is_windows:
+            if WindowsPowershellSession is None or _windows_dotnet_error is not None:
+                raise DotNetMissingError(
+                    'Failed to load CoreCLR. .NET SDK is required for OpenHands CLI on Windows.',
+                    details=str(_windows_dotnet_error)
+                    if _windows_dotnet_error
+                    else None,
+                ) from _windows_dotnet_error
             self._powershell_session = WindowsPowershellSession(
                 work_dir=self._workspace_path,
                 username=None,  # Use current user
