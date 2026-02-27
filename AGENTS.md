@@ -13,6 +13,8 @@ OpenHands is an AI coding assistant with a Python/FastAPI backend (port 3000) an
 | Backend (FastAPI/Uvicorn) | 3000 | `make start-backend` |
 | Frontend (Vite/React Router) | 3001 | `make start-frontend` |
 
+With `make run`: backend serves API on 3000; frontend dev server on 3001. Open http://localhost:3001 in the browser.
+
 ### Quick start
 
 1. `make build` (or `make build-frontend` if deps already installed)
@@ -33,6 +35,10 @@ A `.devcontainer` is available. Use `Dev Container: Reopen in Container` (Ctrl+S
 ### MCP (Model Context Protocol)
 
 MCP servers can be configured in `config.toml` under `[mcp]` (sse_servers, shttp_servers, stdio_servers). See `config.template.toml` for examples.
+
+### IDE / Pyright
+
+- **Slow enumeration**: `pyrightconfig.json` and `python.analysis.diagnosticMode: openFilesOnly` in `.vscode/settings.json` reduce scan time. See [DEV-SETUP.md](DEV-SETUP.md) Troubleshooting.
 
 ### Non-obvious caveats
 

@@ -115,7 +115,17 @@ poetry run pytest tests/ --collect-only -q
 make run
 ```
 
-**גישה:** Backend + Frontend מוגשים ב-http://localhost:3000. פורט 3001 משמש ל-dev server (hot reload) כשמריצים `make start-frontend` בנפרד.
+**גישה:** עם `make run` – פתח http://localhost:3001 בדפדפן (frontend dev server). Backend על 3000.
+
+## Troubleshooting
+
+| בעיה | פתרון |
+|------|-------|
+| Pyright איטי / "Enumeration taking longer than 10s" | וודא `pyrightconfig.json` (exclude) ו-`python.analysis.diagnosticMode: openFilesOnly` ב-settings.json |
+| `stubPath is not a valid directory` | הרץ `make setup-venv`; בחר `.venv/bin/python` כ-interpreter |
+| Frontend build חסר | `cd frontend && npm run build` |
+| Backend crash על startup | וודא `frontend/build` קיים לפני `make start-backend` |
+| Agent Execution Timed Out | Reload Window (Ctrl+Shift+P → Developer: Reload Window); פתח תיקיית פרויקט בלבד |
 
 ---
 

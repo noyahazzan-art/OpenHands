@@ -6,6 +6,18 @@
     "files.eol": "\n",
     "files.trimTrailingWhitespace": true,
     "files.insertFinalNewline": true,
+    "search.exclude": {
+        "**/node_modules": true,
+        "**/.git": true,
+        "**/.venv": true,
+        "**/frontend": true,
+        "**/third_party": true,
+        "**/evaluation": true,
+        "**/poetry.lock": true,
+        "**/logs": true,
+        "**/workspace": true,
+        "**/.cursor": true
+    },
     "files.watcherExclude": {
         "**/node_modules": true,
         "**/.git": true,
@@ -13,7 +25,10 @@
         "**/frontend": true,
         "**/third_party": true,
         "**/evaluation": true,
-        "**/poetry.lock": true
+        "**/poetry.lock": true,
+        "**/logs": true,
+        "**/workspace": true,
+        "**/.cursor": true
     },
     "python.defaultInterpreterPath": "${workspaceFolder}/.venv/bin/python",
     "// Python: אם .venv חסר הרץ make setup-venv. Windows: Select Interpreter -> .venv/Scripts/python.exe",
@@ -29,6 +44,7 @@
     ],
     "cursorpyright.analysis.autoImportCompletions": true,
     "cursorpyright.analysis.autoSearchPaths": true,
+    "python.analysis.diagnosticMode": "openFilesOnly",
     "python.analysis.exclude": [
         "**/node_modules",
         "**/.git",
@@ -49,6 +65,9 @@
         "**/kind",
         "**/.mypy_cache",
         "**/.pytest_cache",
-        "**/.ruff_cache"
+        "**/.ruff_cache",
+        "**/logs",
+        "**/workspace",
+        "**/.cursor"
     ]
 }

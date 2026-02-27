@@ -69,7 +69,7 @@ Write-Host "Backend started successfully." -ForegroundColor Green
 # Start frontend (foreground - blocks)
 Write-Host "Starting frontend..." -ForegroundColor Yellow
 $env:VITE_BACKEND_HOST = $BackendHostPort
-$env:VITE_FRONTEND_PORT = $FrontendPort
+$env:VITE_FRONTEND_PORT = $FrontendPort.ToString()
 Push-Location frontend
 try {
     npm run dev -- --port $FrontendPort --host $FrontendHost
