@@ -78,6 +78,42 @@ poetry run pre-commit run --all-files --config ./dev_config/python/.pre-commit-c
 - Use `litellm_proxy/` model prefix with `base_url` for LiteLLM proxy
 - See config.template.toml for `[llm]` options
 
+## Proxy Cluster (10.0.0.x)
+
+### Discovered Hosts
+
+| IP | SSH (22) | HTTP (80) | HTTPS (443) | Proxy (8080) | Squid (3128) |
+|----|----------|-----------|-------------|--------------|--------------|
+| 10.0.0.1 | ✓ | ✓ | ✓ | ✓ | ✓ |
+| 10.0.0.2 | ✓ | ✓ | ✓ | ✓ | ✓ |
+| 10.0.0.10 | ✓ | ✓ | ✓ | ✓ | ✓ |
+| 10.0.0.11 | ✓ | ✓ | ✓ | ✓ | ✓ |
+| 10.0.0.50 | ✓ | ✓ | ✓ | ✓ | ✓ |
+| 10.0.0.100 | ✓ | ✓ | ✓ | ✓ | ✓ |
+
+**Proxy in use**: `http://10.0.0.100:8080` (configured in `frontend/.env`).
+
+### Operating System Detection
+
+OS cannot be determined remotely without SSH access. From this environment:
+
+- **HTTP headers**: Requests to the proxy return no usable Server/OS headers.
+- **SSH banner**: Requires SSH credentials; with access, run: `ssh user@10.0.0.100 "uname -a"` to get kernel/OS.
+
+**Manual OS check** (if you have SSH access):
+
+```bash
+# Single host
+ssh user@10.0.0.100 "uname -a"
+
+# All cluster hosts
+for ip in 10.0.0.1 10.0.0.2 10.0.0.10 10.0.0.11 10.0.0.50 10.0.0.100; do
+  echo "=== $ip ===" && ssh -o ConnectTimeout=3 user@$ip "uname -a" 2>/dev/null || echo "no access"
+done
+```
+
+**Likely setup**: Ports 8080/3128 suggest Squid or similar proxy on Linux; typical for corporate proxies.
+
 ## SSH Connection
 
 ### Git over SSH
