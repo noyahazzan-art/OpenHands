@@ -360,6 +360,10 @@ setup-config-basic:
 openhands-cloud-run:
 	@$(MAKE) run BACKEND_HOST="0.0.0.0" BACKEND_PORT="12000" FRONTEND_HOST="0.0.0.0" FRONTEND_PORT="12001"
 
+# Deploy to Google Cloud Run (requires gcloud CLI)
+deploy-google-cloud:
+	@./scripts/deploy-google-cloud.sh
+
 # Develop in container
 docker-dev:
 	@if [ -f /.dockerenv ]; then \
@@ -394,8 +398,9 @@ help:
 	@echo "                        Backend Log file will be stored in the 'logs' directory."
 	@echo "  $(GREEN)docker-dev$(RESET)          - Build and run the OpenHands application in Docker."
 	@echo "  $(GREEN)docker-run$(RESET)          - Run the OpenHands application, starting both backend and frontend servers in Docker."
+	@echo "  $(GREEN)deploy-google-cloud$(RESET) - Deploy OpenHands to Google Cloud Run (requires gcloud CLI)."
 	@echo "  $(GREEN)help$(RESET)                - Display this help message, providing information on available targets."
 
 # Phony targets
-.PHONY: build check-dependencies check-system check-python check-npm check-nodejs check-docker check-poetry setup-venv install-python-dependencies install-frontend-dependencies install-pre-commit-hooks lint-backend lint-frontend lint test-frontend test-backend test build-frontend start-backend start-frontend _run_setup run run-wsl setup-config setup-config-prompts setup-config-basic openhands-cloud-run docker-dev docker-run clean help
+.PHONY: build check-dependencies check-system check-python check-npm check-nodejs check-docker check-poetry setup-venv install-python-dependencies install-frontend-dependencies install-pre-commit-hooks lint-backend lint-frontend lint test-frontend test-backend test build-frontend start-backend start-frontend _run_setup run run-wsl setup-config setup-config-prompts setup-config-basic openhands-cloud-run deploy-google-cloud docker-dev docker-run clean help
 .PHONY: kind

@@ -1,0 +1,54 @@
+# Google Cloud Build - deploy OpenHands to Cloud Run
+# Prerequisites: gcloud auth login, gcloud config set project PROJECT_ID
+# Enable APIs: gcloud services enable cloudbuild.googleapis.com run.googleapis.com artifactregistry.googleapis.com
+# Usage: gcloud builds submit --config=cloudbuild.yaml
+# Note: Cloud Run has no Docker socket - use SANDBOX_REMOTE_RUNTIME_API_URL for agent sandboxes
+
+steps:
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'build'
+      - '-f'
+      - 'containers/app/Dockerfile'
+      - '-t'
+      - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPOSITORY:-openhands}/openhands:${SHORT_SHA:-latest}'
+      - '.'
+    id: build
+
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'push'
+      - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPOSITORY:-openhands}/openhands:${SHORT_SHA:-latest}'
+    id: push
+    waitFor: ['build']
+
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - '${_SERVICE_NAME:-openhands}'
+      - '--image'
+      - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPOSITORY:-openhands}/openhands:${SHORT_SHA:-latest}'
+      - '--region'
+      - '${_REGION}'
+      - '--platform'
+      - 'managed'
+      - '--allow-unauthenticated'
+      - '--port'
+      - '3000'
+      - '--set-env-vars'
+      - 'WORKSPACE_BASE=/workspace,SANDBOX_RUNTIME_CONTAINER_IMAGE=docker.openhands.dev/openhands/runtime:1.1-nikolaik,SERVE_FRONTEND=true'
+    id: deploy
+    waitFor: ['push']
+
+images:
+  - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPOSITORY:-openhands}/openhands:${SHORT_SHA:-latest}'
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+
+substitutions:
+  _REGION: us-central1
+  _SERVICE_NAME: openhands
+  _REPOSITORY: openhands

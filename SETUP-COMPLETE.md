@@ -100,6 +100,19 @@ poetry run pre-commit run --all-files --config ./dev_config/python/.pre-commit-c
 2. **config.toml**: Gitignored - run `make setup-config-basic` if missing
 3. **LLM API key**: Required for conversations - configure before use
 
+## Google Cloud Run
+
+Deploy to Google Cloud:
+
+```bash
+# One-time: gcloud auth login && gcloud config set project YOUR_PROJECT_ID
+./scripts/deploy-google-cloud.sh [PROJECT_ID] [REGION]
+```
+
+Or: `gcloud builds submit --config=cloudbuild.yaml`
+
+**Note**: Cloud Run has no Docker socket. For agent conversations, configure `SANDBOX_REMOTE_RUNTIME_API_URL` in config or use AllHands Remote Runtime.
+
 ## File Structure
 
 ```
@@ -107,4 +120,5 @@ workspace/     # Agent working directory
 logs/          # Backend logs
 config.toml    # App config (gitignored)
 frontend/build # Static assets for backend
+cloudbuild.yaml # Google Cloud Build config
 ```
