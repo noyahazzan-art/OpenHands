@@ -132,6 +132,32 @@ done
 - `chmod 600 ~/.ssh/id_*` for private keys
 - `ssh-keygen -R hostname` to fix changed host keys
 
+## Freeing Disk Space
+
+### Linux / Cursor Cloud
+
+```bash
+# Python caches
+find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null
+rm -rf .pytest_cache .mypy_cache .ruff_cache
+
+# Package caches
+poetry cache clear pypi --all
+pip cache purge
+npm cache clean --force
+
+# Large caches (will re-download when needed)
+rm -rf ~/.cache/pypoetry ~/.cache/pre-commit ~/.cache/ms-playwright
+```
+
+### Windows (Disk C)
+
+- **Disk Cleanup**: Run `cleanmgr` or Settings → System → Storage → Temporary files
+- **Temp folders**: Delete `%TEMP%` and `C:\Windows\Temp` contents
+- **npm cache**: `npm cache clean --force`
+- **Poetry cache**: `poetry cache clear pypi --all`
+- **node_modules**: Remove `node_modules` in projects you no longer use (reinstall with `npm install` when needed)
+
 ## Known Limitations
 
 1. **Docker in nested containers**: Use host Docker or native environment for full agent functionality
