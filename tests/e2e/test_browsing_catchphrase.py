@@ -21,7 +21,7 @@ try:
     from playwright.sync_api import Page, expect
 except ImportError:
     pytest.skip(
-        "playwright not installed; run with: poetry run pytest tests/e2e/test_browsing_catchphrase.py -v",
+        'playwright not installed; run with: poetry run pytest tests/e2e/test_browsing_catchphrase.py -v',
         allow_module_level=True,
     )
 

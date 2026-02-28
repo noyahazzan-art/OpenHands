@@ -361,6 +361,7 @@ classpath = "my_package.my_module.MyCustomAgent"
 # Configure volumes under the [sandbox] section:
 # [sandbox]
 # volumes = "/my/host/dir:/workspace:rw,/path2:/workspace/path2:ro"
+# For SSH (git clone, remote access): volumes = "/home/user/.ssh:/workspace/.ssh:ro"
 
 #################################### Security ###################################
 # Configuration for security features

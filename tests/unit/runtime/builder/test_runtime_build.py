@@ -31,6 +31,17 @@ OH_VERSION = f'oh_v{oh_version}'
 DEFAULT_BASE_IMAGE = 'nikolaik/python-nodejs:python3.12-nodejs22'
 
 
+def _docker_available() -> bool:
+    """Check if Docker daemon is available."""
+    try:
+        client = docker.from_env()
+        client.ping()
+        client.close()
+        return True
+    except Exception:
+        return False
+
+
 @pytest.fixture
 def temp_dir(tmp_path_factory: TempPathFactory) -> str:
     return str(tmp_path_factory.mktemp('test_runtime_build'))
@@ -48,6 +59,8 @@ def mock_docker_client():
 
 @pytest.fixture
 def docker_runtime_builder():
+    if not _docker_available():
+        pytest.skip('Docker daemon not available')
     client = docker.from_env()
     return DockerRuntimeBuilder(client)
 
@@ -532,6 +545,8 @@ def test_output_build_progress(docker_runtime_builder):
 
 @pytest.fixture(scope='function')
 def live_docker_image():
+    if not _docker_available():
+        pytest.skip('Docker daemon not available')
     client = docker.from_env()
     unique_id = str(uuid.uuid4())[:8]  # Use first 8 characters of a UUID
     unique_prefix = f'test_image_{unique_id}'
@@ -653,6 +668,8 @@ def _format_size_to_gb(bytes_size):
 
 
 def test_list_dangling_images():
+    if not _docker_available():
+        pytest.skip('Docker daemon not available')
     client = docker.from_env()
     dangling_images = client.images.list(filters={'dangling': True})
     if dangling_images and len(dangling_images) > 0:

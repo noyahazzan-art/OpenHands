@@ -7,6 +7,11 @@ BACKEND_PORT ?= 3000
 BACKEND_HOST_PORT = "$(BACKEND_HOST):$(BACKEND_PORT)"
 FRONTEND_HOST ?= "127.0.0.1"
 FRONTEND_PORT ?= 3001
+# Optional proxy: HTTP_PROXY=http://proxy:8080 HTTPS_PROXY=http://proxy:8080 make run
+# NO_PROXY=localhost,127.0.0.1 to bypass proxy for local connections
+HTTP_PROXY ?=
+HTTPS_PROXY ?=
+NO_PROXY ?=
 DEFAULT_WORKSPACE_DIR = "./workspace"
 DEFAULT_MODEL = "gpt-4o"
 CONFIG_FILE = config.toml
@@ -265,7 +270,8 @@ build-frontend:
 # Start backend
 start-backend:
 	@echo "$(YELLOW)Starting backend...$(RESET)"
-	@poetry run uvicorn openhands.server.listen:app --host $(BACKEND_HOST) --port $(BACKEND_PORT) --reload --reload-exclude "./workspace"
+	@HTTP_PROXY="$(HTTP_PROXY)" HTTPS_PROXY="$(HTTPS_PROXY)" NO_PROXY="$(NO_PROXY)" \
+	poetry run uvicorn openhands.server.listen:app --host $(BACKEND_HOST) --port $(BACKEND_PORT) --reload --reload-exclude "./workspace"
 
 # Start frontend
 start-frontend:
@@ -277,13 +283,15 @@ start-frontend:
 	else \
 		SCRIPT=dev; \
 	fi; \
+	HTTP_PROXY="$(HTTP_PROXY)" HTTPS_PROXY="$(HTTPS_PROXY)" NO_PROXY="$(NO_PROXY)" \
 	VITE_BACKEND_HOST=$(BACKEND_HOST_PORT) VITE_FRONTEND_PORT=$(FRONTEND_PORT) npm run $$SCRIPT -- --port $(FRONTEND_PORT) --host $(BACKEND_HOST)
 
 # Common setup for running the app (non-callable)
 _run_setup:
 	@mkdir -p logs
 	@echo "$(YELLOW)Starting backend server...$(RESET)"
-	@poetry run uvicorn openhands.server.listen:app --host $(BACKEND_HOST) --port $(BACKEND_PORT) &
+	@HTTP_PROXY="$(HTTP_PROXY)" HTTPS_PROXY="$(HTTPS_PROXY)" NO_PROXY="$(NO_PROXY)" \
+	poetry run uvicorn openhands.server.listen:app --host $(BACKEND_HOST) --port $(BACKEND_PORT) &
 	@echo "$(YELLOW)Waiting for the backend to start...$(RESET)"
 	@until nc -z localhost $(BACKEND_PORT); do sleep 0.1; done
 	@echo "$(GREEN)Backend started successfully.$(RESET)"
@@ -349,8 +357,30 @@ setup-config-basic:
 	> config.toml
 	@echo "$(GREEN)config.toml created.$(RESET)"
 
+# Verify setup: config, workspace, logs, frontend build
+verify:
+	@echo "$(YELLOW)Verifying setup...$(RESET)"
+	@test -f config.toml || (echo "$(RED)Missing config.toml - run: make setup-config-basic$(RESET)" && exit 1)
+	@mkdir -p workspace logs
+	@test -d frontend/build || (echo "$(RED)Missing frontend/build - run: make build-frontend$(RESET)" && exit 1)
+	@echo "$(GREEN)✓ config.toml$(RESET)"
+	@echo "$(GREEN)✓ workspace/ logs/$(RESET)"
+	@echo "$(GREEN)✓ frontend/build$(RESET)"
+	@echo "$(GREEN)Setup verified.$(RESET)"
+
+# Ensure all setup (config, dirs, build) - idempotent
+setup-all:
+	@if [ ! -f config.toml ]; then $(MAKE) -s setup-config-basic; fi
+	@mkdir -p workspace logs
+	@if [ ! -d frontend/build ]; then $(MAKE) -s build-frontend; fi
+	@echo "$(GREEN)Setup complete.$(RESET)"
+
 openhands-cloud-run:
 	@$(MAKE) run BACKEND_HOST="0.0.0.0" BACKEND_PORT="12000" FRONTEND_HOST="0.0.0.0" FRONTEND_PORT="12001"
+
+# Deploy to Google Cloud Run (requires gcloud CLI)
+deploy-google-cloud:
+	@./scripts/deploy-google-cloud.sh
 
 # Develop in container
 docker-dev:
@@ -380,14 +410,17 @@ help:
 	@echo "  $(GREEN)setup-venv$(RESET)          - Create in-project .venv (for IDE/Pyright). Use for local development."
 	@echo "  $(GREEN)setup-config$(RESET)        - Setup the configuration for OpenHands by providing LLM API key,"
 	@echo "                        LLM Model name, and workspace directory."
+	@echo "  $(GREEN)setup-all$(RESET)           - Ensure config, workspace, logs, and frontend build exist."
+	@echo "  $(GREEN)verify$(RESET)             - Verify setup (config, workspace, frontend build)."
 	@echo "  $(GREEN)start-backend$(RESET)       - Start the backend server for the OpenHands project."
 	@echo "  $(GREEN)start-frontend$(RESET)      - Start the frontend server for the OpenHands project."
 	@echo "  $(GREEN)run$(RESET)                 - Run the OpenHands application, starting both backend and frontend servers."
 	@echo "                        Backend Log file will be stored in the 'logs' directory."
 	@echo "  $(GREEN)docker-dev$(RESET)          - Build and run the OpenHands application in Docker."
 	@echo "  $(GREEN)docker-run$(RESET)          - Run the OpenHands application, starting both backend and frontend servers in Docker."
+	@echo "  $(GREEN)deploy-google-cloud$(RESET) - Deploy OpenHands to Google Cloud Run (requires gcloud CLI)."
 	@echo "  $(GREEN)help$(RESET)                - Display this help message, providing information on available targets."
 
 # Phony targets
-.PHONY: build check-dependencies check-system check-python check-npm check-nodejs check-docker check-poetry setup-venv install-python-dependencies install-frontend-dependencies install-pre-commit-hooks lint-backend lint-frontend lint test-frontend test-backend test build-frontend start-backend start-frontend _run_setup run run-wsl setup-config setup-config-prompts setup-config-basic openhands-cloud-run docker-dev docker-run clean help
+.PHONY: build check-dependencies check-system check-python check-npm check-nodejs check-docker check-poetry setup-venv install-python-dependencies install-frontend-dependencies install-pre-commit-hooks lint-backend lint-frontend lint test-frontend test-backend test build-frontend start-backend start-frontend _run_setup run run-wsl setup-config setup-config-prompts setup-config-basic setup-all verify openhands-cloud-run deploy-google-cloud docker-dev docker-run clean help
 .PHONY: kind

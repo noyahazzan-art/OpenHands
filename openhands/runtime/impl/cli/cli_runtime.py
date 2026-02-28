@@ -50,21 +50,19 @@ from openhands.llm.llm_registry import LLMRegistry
 from openhands.runtime.base import Runtime
 from openhands.runtime.plugins import PluginRequirement
 from openhands.runtime.runtime_status import RuntimeStatus
+from openhands.runtime.utils.windows_exceptions import DotNetMissingError
 
 if TYPE_CHECKING:
     from openhands.runtime.utils.windows_bash import WindowsPowershellSession
 
 # Import Windows PowerShell support if on Windows.
 # Defer failure to runtime (connect()) so pytest and other tools can import without .NET.
+_windows_dotnet_error: BaseException | None = None
 if sys.platform == 'win32':
     WindowsPowershellSession = None  # type: ignore[assignment]
-    _windows_dotnet_error: BaseException | None = None
     try:
-        from openhands.runtime.utils.windows_exceptions import DotNetMissingError
         from openhands.runtime.utils.windows_bash import WindowsPowershellSession  # isort: skip
     except (ImportError, Exception) as err:
-        from openhands.runtime.utils.windows_exceptions import DotNetMissingError
-
         WindowsPowershellSession = None  # type: ignore[assignment]
         _windows_dotnet_error = err
 

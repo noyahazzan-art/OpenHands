@@ -20,8 +20,9 @@ export default defineConfig(({ mode }) => {
   const PROTOCOL = USE_TLS ? "https" : "http";
   const WS_PROTOCOL = USE_TLS ? "wss" : "ws";
 
-  const API_URL = `${PROTOCOL}://${VITE_BACKEND_HOST}/`;
-  const WS_URL = `${WS_PROTOCOL}://${VITE_BACKEND_HOST}/`;
+  // No trailing slash - Vite proxy appends path as-is
+  const API_URL = `${PROTOCOL}://${VITE_BACKEND_HOST}`;
+  const WS_URL = `${WS_PROTOCOL}://${VITE_BACKEND_HOST}`;
   const FE_PORT = Number.parseInt(VITE_FRONTEND_PORT, 10);
 
   return {
@@ -96,7 +97,12 @@ export default defineConfig(({ mode }) => {
           ws: true,
           changeOrigin: true,
           secure: !INSECURE_SKIP_VERIFY,
-          // rewriteWsOrigin: true,
+        },
+        "/sockets": {
+          target: WS_URL,
+          ws: true,
+          changeOrigin: true,
+          secure: !INSECURE_SKIP_VERIFY,
         },
       },
       watch: {

@@ -36,9 +36,9 @@
 
 ## בענן (GitHub Codespaces / Dev Container / Cursor)
 
-1. **פתח את הפרויקט ב-Dev Container**  
-   - ב-Cursor: **Dev Containers: Reopen in Container**  
-   - ב-VS Code: **Reopen in Container**  
+1. **פתח את הפרויקט ב-Dev Container**
+   - ב-Cursor: **Dev Containers: Reopen in Container**
+   - ב-VS Code: **Reopen in Container**
    - ה-Container מריץ אוטומטית את `.devcontainer/setup.sh`.
 
 2. **מה ה-setup עושה**
@@ -53,8 +53,8 @@
    - אין צורך ב-`extraPaths` / `stubPath` — הוגדרו ב-`.vscode/settings.json` רק נתיב ה-interpreter.
 
 4. **טסטים**
-   - `make test` — בקאנד + פרונט  
-   - `make test-backend` — `poetry run pytest tests/`  
+   - `make test` — בקאנד + פרונט
+   - `make test-backend` — `poetry run pytest tests/`
    - טסטי E2E עם Playwright רצים רק כשמריצים דרך Poetry (יש skip אם playwright לא מותקן).
 
 ---
