@@ -1,20 +1,22 @@
 # OpenHands - Windows remediation script
-# Addresses: Secure Boot (1801), DCOM (10010)
+# Addresses: Secure Boot (1801), DCOM (10010), PickerHost crash
 # Run as Administrator for full remediation
 
 param(
     [switch]$SecureBoot,
     [switch]$DCOM,
+    [switch]$PickerHost,
     [switch]$All
 )
 
 $ErrorActionPreference = "Continue"
 
-if (-not ($SecureBoot -or $DCOM -or $All)) {
-    Write-Host "Usage: .\scripts\fix-windows-issues.ps1 [-SecureBoot] [-DCOM] [-All]" -ForegroundColor Cyan
+if (-not ($SecureBoot -or $DCOM -or $PickerHost -or $All)) {
+    Write-Host "Usage: .\scripts\fix-windows-issues.ps1 [-SecureBoot] [-DCOM] [-PickerHost] [-All]" -ForegroundColor Cyan
     Write-Host "  -SecureBoot  Open Secure Boot certificate update page" -ForegroundColor Gray
     Write-Host "  -DCOM        Apply DCOM 10010 remediation (services)" -ForegroundColor Gray
-    Write-Host "  -All         Run both (default)" -ForegroundColor Gray
+    Write-Host "  -PickerHost  Run sfc /scannow for PickerHost.exe crashes" -ForegroundColor Gray
+    Write-Host "  -All         Run all (default)" -ForegroundColor Gray
     Write-Host ""
     $All = $true
 }
@@ -78,8 +80,28 @@ function Invoke-DCOMFix {
     Write-Host "  If DCOM errors persist: Settings > Gaming > Xbox Game Bar - disable if unused." -ForegroundColor Gray
 }
 
+# PickerHost.exe crash (BEX64) - System file check
+function Invoke-PickerHostFix {
+    Write-Host "`n[PickerHost crash] Running system file check (sfc /scannow)..." -ForegroundColor Yellow
+    $isAdmin = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+    if (-not $isAdmin) {
+        Write-Host "  Run as Administrator for sfc /scannow. Starting in new elevated window..." -ForegroundColor Yellow
+        try {
+            Start-Process powershell -ArgumentList "-NoProfile -Command sfc /scannow" -Verb RunAs
+            Write-Host "  sfc /scannow started. May take 10-30 minutes." -ForegroundColor Green
+        } catch {
+            Write-Host "  Run as Admin: Right-click PowerShell > Run as administrator, then: sfc /scannow" -ForegroundColor Red
+        }
+    } else {
+        Write-Host "  Running sfc /scannow (may take 10-30 minutes)..." -ForegroundColor Gray
+        & sfc /scannow
+        Write-Host "  sfc /scannow completed." -ForegroundColor Green
+    }
+}
+
 # Run selected fixes
 if ($SecureBoot -or $All) { Invoke-SecureBootFix }
 if ($DCOM -or $All) { Invoke-DCOMFix }
+if ($PickerHost -or $All) { Invoke-PickerHostFix }
 
 Write-Host "`nDone." -ForegroundColor Cyan
