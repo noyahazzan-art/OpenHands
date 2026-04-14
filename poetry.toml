@@ -1,0 +1,4 @@
+# Keeps the virtualenv at ./.venv (ignored by git) so Windows stays under MAX_PATH
+# limits when installing packages with very deep paths (e.g. JupyterLab extensions).
+[virtualenvs]
+in-project = true

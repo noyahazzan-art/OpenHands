@@ -1,0 +1,15 @@
+# Optional GPU overrides for docker compose.
+# Usage: docker compose -f docker-compose.yml -f docker-compose.gpu.yml up -d
+#
+# Use when the OpenHands container should see NVIDIA GPUs (e.g. local ML).
+# On CPU-only hosts, omit this file — the base docker-compose.yml has no GPU deploy block.
+
+services:
+  openhands:
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [ gpu, compute, utility ]

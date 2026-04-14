@@ -1,0 +1,36 @@
+{
+  "folders": [
+    {
+      "path": ".",
+    },
+    {
+      "path": "C:\\temp",
+      "name": "temp",
+    },
+    {
+      "path": "C:\\",
+      "name": "C-Drive",
+    },
+  ],
+  "settings": {
+    "files.exclude": {
+      "**/node_modules": true,
+      "**/.git": true,
+      "**/__pycache__": true,
+      "**/*.pyc": true,
+    },
+    "search.exclude": {
+      "**/node_modules": true,
+      "**/.git": true,
+      "**/dist": true,
+      "**/build": true,
+      "**/__pycache__": true,
+    },
+    "files.watcherExclude": {
+      "**/node_modules/**": true,
+      "**/.git/objects/**": true,
+      "**/__pycache__/**": true,
+    },
+    "powershell.cwd": "openhands",
+  },
+}
