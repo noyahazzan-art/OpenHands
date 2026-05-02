@@ -354,6 +354,10 @@ def test_get_git_diff_file_too_large():
             git_diff.get_git_diff('/nonexistent/path.txt')
 
 
+@pytest.mark.skipif(
+    sys.platform == 'win32',
+    reason='git behavior for non-repository paths differs on Windows',
+)
 def test_get_git_diff_no_repository():
     """Raises ValueError('no_repository') when the file is outside any git repository."""
     with tempfile.TemporaryDirectory() as tmp_dir:

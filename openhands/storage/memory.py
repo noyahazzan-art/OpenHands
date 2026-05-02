@@ -1,5 +1,3 @@
-import os
-
 from openhands.core.logger import openhands_logger as logger
 from openhands.storage.files import FileStore
 
@@ -34,7 +32,7 @@ class InMemoryFileStore(FileStore):
             if len(parts) == 1:
                 files.append(file)
             else:
-                dir_path = os.path.join(path, parts[0])
+                dir_path = f'{path}/{parts[0]}' if path else parts[0]
                 if not dir_path.endswith('/'):
                     dir_path += '/'
                 if dir_path not in files:

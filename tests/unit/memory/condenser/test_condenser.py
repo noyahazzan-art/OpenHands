@@ -241,7 +241,7 @@ def test_observation_masking_condenser_respects_attention_window():
 
     assert len(result) == len(events)
 
-    for index, (event, condensed_event) in enumerate(zip(events, result)):
+    for index, (event, condensed_event) in enumerate(zip(events, result, strict=False)):
         # If we're outside the attention window, observations should be masked.
         if index < len(events) - attention_window:
             if isinstance(event, Observation):
@@ -283,7 +283,7 @@ def test_browser_output_condenser_respects_attention_window():
 
     assert len(result) == len(events)
     cnt = 4
-    for event, condensed_event in zip(events, result):
+    for event, condensed_event in zip(events, result, strict=False):
         if isinstance(event, (BrowserOutputObservation, AgentCondensationObservation)):
             if cnt > attention_window:
                 assert 'Content omitted' in str(condensed_event)

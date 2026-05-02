@@ -486,6 +486,7 @@ async def test_run_controller_stop_with_stuck(
     for action, observation in zip(
         repeating_actions_and_observations[0::2],
         repeating_actions_and_observations[1::2],
+        strict=False,
     ):
         action_dict = event_to_dict(action)
         observation_dict = event_to_dict(observation)
@@ -1167,7 +1168,7 @@ async def test_context_window_exceeded_error_handling(
     # when we throw the context window exceeded error, we should see the
     # post-step view compressed (condensation effects should be visible).
     for index, (first_view, second_view) in enumerate(
-        zip(step_state.views[:-1], step_state.views[1:])
+        zip(step_state.views[:-1], step_state.views[1:], strict=False)
     ):
         if index == error_after:
             # Verify that no CondensationAction is present in either view

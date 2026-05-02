@@ -46,7 +46,7 @@ class LocalFileStore(FileStore):
 
     def list(self, path: str) -> list[str]:
         full_path = self.get_full_path(path)
-        files = [os.path.join(path, f) for f in os.listdir(full_path)]
+        files = [f'{path}/{f}' if path else f for f in os.listdir(full_path)]
         files = [f + '/' if os.path.isdir(self.get_full_path(f)) else f for f in files]
         return files
 

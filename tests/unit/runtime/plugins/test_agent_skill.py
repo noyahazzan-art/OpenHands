@@ -446,7 +446,7 @@ def test_search_dir(tmp_path):
 
     expected = (
         f'[Found 1 matches for "bingo" in {tmp_path}]\n'
-        f'{tmp_path}/a50.txt (Line 6): bingo\n'
+        f'{tmp_path / "a50.txt"} (Line 6): bingo\n'
         f'[End of matches for "bingo" in {tmp_path}]\n'
     )
     assert result.split('\n') == expected.split('\n')
@@ -559,7 +559,7 @@ def test_find_file(tmp_path):
     assert result is not None
 
     expected = f'[Found 1 matches for "a.txt" in {tmp_path}]\n'
-    expected += f'{tmp_path}/a.txt\n'
+    expected += f'{tmp_path / "a.txt"}\n'
     expected += f'[End of matches for "a.txt" in {tmp_path}]\n'
     assert result.split('\n') == expected.split('\n')
 

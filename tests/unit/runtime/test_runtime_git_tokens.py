@@ -1,3 +1,4 @@
+import sys
 from types import MappingProxyType
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -350,6 +351,10 @@ async def test_clone_or_init_repo_auth_error(temp_dir):
 
 
 @pytest.mark.asyncio
+@pytest.mark.skipif(
+    sys.platform == 'win32',
+    reason='workspace_root uses Windows paths; shlex.quote wraps backslash paths in quotes on Windows',
+)
 async def test_clone_or_init_repo_github_with_token(temp_dir, monkeypatch):
     config = OpenHandsConfig()
     file_store = get_file_store('local', temp_dir)
@@ -399,6 +404,10 @@ async def test_clone_or_init_repo_github_with_token(temp_dir, monkeypatch):
 
 
 @pytest.mark.asyncio
+@pytest.mark.skipif(
+    sys.platform == 'win32',
+    reason='workspace_root uses Windows paths; shlex.quote wraps backslash paths in quotes on Windows',
+)
 async def test_clone_or_init_repo_github_no_token(temp_dir, monkeypatch):
     """Test cloning a GitHub repository without a token"""
     config = OpenHandsConfig()
@@ -438,6 +447,10 @@ async def test_clone_or_init_repo_github_no_token(temp_dir, monkeypatch):
 
 
 @pytest.mark.asyncio
+@pytest.mark.skipif(
+    sys.platform == 'win32',
+    reason='workspace_root uses Windows paths; shlex.quote wraps backslash paths in quotes on Windows',
+)
 async def test_clone_or_init_repo_gitlab_with_token(temp_dir, monkeypatch):
     config = OpenHandsConfig()
     file_store = get_file_store('local', temp_dir)
@@ -487,6 +500,10 @@ async def test_clone_or_init_repo_gitlab_with_token(temp_dir, monkeypatch):
 
 
 @pytest.mark.asyncio
+@pytest.mark.skipif(
+    sys.platform == 'win32',
+    reason='workspace_root uses Windows paths; shlex.quote wraps backslash paths in quotes on Windows',
+)
 async def test_clone_or_init_repo_azure_devops_with_token(temp_dir, monkeypatch):
     """Test cloning Azure DevOps repository with token"""
     config = OpenHandsConfig()
@@ -538,6 +555,10 @@ async def test_clone_or_init_repo_azure_devops_with_token(temp_dir, monkeypatch)
 
 
 @pytest.mark.asyncio
+@pytest.mark.skipif(
+    sys.platform == 'win32',
+    reason='workspace_root uses Windows paths; shlex.quote wraps backslash paths in quotes on Windows',
+)
 async def test_clone_or_init_repo_with_branch(temp_dir, monkeypatch):
     """Test cloning a repository with a specified branch"""
     config = OpenHandsConfig()

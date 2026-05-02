@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 import shutil
+import sys
 import tempfile
 import threading
 from abc import ABC
@@ -11,6 +12,7 @@ from unittest import TestCase
 from unittest.mock import patch
 
 import botocore.exceptions
+import pytest
 from google.api_core.exceptions import NotFound
 
 from openhands.storage.files import FileStore
@@ -123,6 +125,10 @@ class TestLocalFileStore(TestCase, _StorageTest):
                 f'Failed to remove temporary directory {self.temp_dir}: {e}'
             )
 
+    @pytest.mark.skipif(
+        sys.platform == 'win32',
+        reason='Windows file rename semantics differ for concurrent access',
+    )
     def test_concurrent_writes_no_corruption(self):
         """Test that concurrent writes don't corrupt file content.
 

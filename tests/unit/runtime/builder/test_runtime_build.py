@@ -1,5 +1,6 @@
 import hashlib
 import os
+import sys
 import tempfile
 import uuid
 from importlib.metadata import version
@@ -594,6 +595,10 @@ def test_init(docker_runtime_builder):
     assert docker_runtime_builder.rolling_logger.log_lines == [''] * 10
 
 
+@pytest.mark.skipif(
+    sys.platform == 'win32',
+    reason='Docker build pulls large images and times out on Windows',
+)
 def test_build_image_from_scratch(docker_runtime_builder, tmp_path):
     context_path = str(tmp_path)
     tags = ['test_build:latest']
@@ -666,6 +671,10 @@ def test_list_dangling_images():
         logger.info('No dangling images found')
 
 
+@pytest.mark.skipif(
+    sys.platform == 'win32',
+    reason='Docker build pulls large images and times out on Windows',
+)
 def test_build_image_from_repo(docker_runtime_builder, tmp_path):
     context_path = str(tmp_path)
     tags = ['alpine:latest']
