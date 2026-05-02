@@ -2,6 +2,7 @@
 
 import asyncio
 import json
+import sys
 from unittest import mock
 
 import pytest
@@ -60,6 +61,7 @@ class MockAgent(Agent):
         return SystemMessageAction(content='System message')
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason='MCP is disabled on Windows')
 @pytest.mark.asyncio
 async def test_mcp_tool_timeout_error_handling(conversation_stats):
     """Test that verifies MCP tool timeout errors are properly handled and returned as observations."""

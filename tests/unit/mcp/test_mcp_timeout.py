@@ -1,4 +1,5 @@
 import asyncio
+import sys
 from unittest import mock
 
 import pytest
@@ -7,6 +8,10 @@ from openhands.core.config.mcp_config import MCPConfig, MCPSSEServerConfig
 from openhands.mcp import MCPClient, create_mcp_clients, fetch_mcp_tools_from_config
 
 
+@pytest.mark.skipif(
+    sys.platform == 'win32',
+    reason='MCP client creation is disabled on Windows (sys.platform == win32 guard in create_mcp_clients)',
+)
 @pytest.mark.asyncio
 async def test_sse_connection_timeout():
     """Test that SSE connection timeout is handled gracefully."""
@@ -58,6 +63,7 @@ async def test_fetch_mcp_tools_with_timeout():
         assert tools == []
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason='MCP is disabled on Windows')
 @pytest.mark.asyncio
 async def test_mixed_connection_results():
     """Test that fetch_mcp_tools_from_config returns tools even when some connections fail."""

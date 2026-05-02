@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from typing import Any, AsyncGenerator
 
 from fastapi import Request
+from openhands.sdk.secret import SecretSource, StaticSecret
 from pydantic import PrivateAttr
 
 from openhands.app_server.errors import AuthError
@@ -15,7 +16,6 @@ from openhands.integrations.provider import (
     ProviderType,
 )
 from openhands.integrations.service_types import UserGitInfo
-from openhands.sdk.secret import SecretSource, StaticSecret
 from openhands.server.user_auth.user_auth import UserAuth, get_user_auth
 
 USER_AUTH_ATTR = 'user_auth'

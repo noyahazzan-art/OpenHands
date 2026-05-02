@@ -1,5 +1,4 @@
 import sys
-from typing import Union
 from unittest.mock import Mock
 
 import pytest
@@ -69,7 +68,7 @@ def agent_class(request):
 
 
 @pytest.fixture
-def agent(agent_class, create_llm_registry) -> Union[CodeActAgent, ReadOnlyAgent]:
+def agent(agent_class, create_llm_registry) -> CodeActAgent | ReadOnlyAgent:
     llm_config = LLMConfig(model='gpt-4o', api_key='test_key')
     config = AgentConfig()
     agent = agent_class(config=config, llm_registry=create_llm_registry(llm_config))

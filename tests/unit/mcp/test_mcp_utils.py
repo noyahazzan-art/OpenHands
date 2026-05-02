@@ -19,6 +19,7 @@ async def test_create_mcp_clients_empty():
     assert clients == []
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason='MCP is disabled on Windows')
 @pytest.mark.asyncio
 @patch('openhands.mcp.utils.MCPClient')
 async def test_create_mcp_clients_success(mock_mcp_client):
@@ -49,6 +50,7 @@ async def test_create_mcp_clients_success(mock_mcp_client):
     )
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason='MCP is disabled on Windows')
 @pytest.mark.asyncio
 @patch('openhands.mcp.utils.MCPClient')
 async def test_create_mcp_clients_connection_failure(mock_mcp_client):
@@ -115,6 +117,7 @@ def test_convert_mcp_clients_to_tools():
     assert tools[2] == {'function': {'name': 'tool3'}}
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason='MCP is disabled on Windows')
 @pytest.mark.asyncio
 async def test_call_tool_mcp_no_clients():
     """Test calling MCP tool with no clients."""
@@ -124,6 +127,7 @@ async def test_call_tool_mcp_no_clients():
         await openhands.mcp.utils.call_tool_mcp([], action)
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason='MCP is disabled on Windows')
 @pytest.mark.asyncio
 async def test_call_tool_mcp_no_matching_client():
     """Test calling MCP tool with no matching client."""
@@ -137,6 +141,7 @@ async def test_call_tool_mcp_no_matching_client():
         await openhands.mcp.utils.call_tool_mcp([mock_client], action)
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason='MCP is disabled on Windows')
 @pytest.mark.asyncio
 async def test_call_tool_mcp_success():
     """Test successful MCP tool call."""
@@ -165,6 +170,7 @@ async def test_call_tool_mcp_success():
     mock_client.call_tool.assert_called_once_with('test_tool', {'arg1': 'value1'})
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason='MCP is disabled on Windows')
 @pytest.mark.asyncio
 @patch('openhands.mcp.utils.shutil.which', return_value='/fake/bin/exe')
 @patch('openhands.mcp.utils.MCPClient')
@@ -204,6 +210,7 @@ async def test_create_mcp_clients_stdio_success(mock_mcp_client, _mock_which):
     mock_client_instance.connect_stdio.assert_any_call(stdio_server_configs[1])
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason='MCP is disabled on Windows')
 @pytest.mark.asyncio
 @patch('openhands.mcp.utils.shutil.which', return_value='/fake/bin/exe')
 @patch('openhands.mcp.utils.MCPClient')
@@ -234,6 +241,7 @@ async def test_create_mcp_clients_stdio_connection_failure(
     assert len(clients) == 1
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason='MCP is disabled on Windows')
 @pytest.mark.asyncio
 @patch('openhands.mcp.utils.create_mcp_clients')
 async def test_fetch_mcp_tools_from_config_with_stdio(mock_create_clients):
@@ -267,6 +275,7 @@ async def test_fetch_mcp_tools_from_config_with_stdio(mock_create_clients):
     )
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason='MCP is disabled on Windows')
 @pytest.mark.asyncio
 async def test_call_tool_mcp_stdio_client():
     """Test calling MCP tool on a stdio client."""

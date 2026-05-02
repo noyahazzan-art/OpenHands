@@ -8,6 +8,7 @@ import zipfile
 from collections import defaultdict
 from dataclasses import dataclass
 from datetime import datetime, timedelta
+from pathlib import Path
 from typing import Any, AsyncGenerator, Sequence, cast
 from urllib.parse import urlparse
 from uuid import UUID, uuid4
@@ -2225,7 +2226,7 @@ class LiveStatusAppConversationService(AppConversationServiceBase):
                 for root, dirs, files in os.walk(temp_dir):
                     for file in files:
                         file_path = os.path.join(root, file)
-                        arcname = os.path.relpath(file_path, temp_dir)
+                        arcname = str(Path(file_path).relative_to(temp_dir))
                         zipf.write(file_path, arcname)
 
             # Read the zip file content
