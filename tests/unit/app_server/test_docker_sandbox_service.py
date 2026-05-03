@@ -1972,3 +1972,396 @@ class TestDockerSandboxServiceHostNetwork:
         # Verify - should be STARTING because container started within grace period
         assert result is not None
         assert result.status == SandboxStatus.STARTING
+
+
+class TestDockerSandboxServicePrivileged:
+    """Test cases for DockerSandboxService privileged mode and cap_add support."""
+
+    @pytest.fixture
+    def service_with_privileged(
+        self, mock_sandbox_spec_service, mock_httpx_client, mock_docker_client
+    ):
+        """Create DockerSandboxService instance with privileged mode enabled."""
+        return DockerSandboxService(
+            sandbox_spec_service=mock_sandbox_spec_service,
+            container_name_prefix='oh-test-',
+            host_port=3000,
+            container_url_pattern='http://localhost:{port}',
+            mounts=[],
+            exposed_ports=[
+                ExposedPort(
+                    name=AGENT_SERVER, description='Agent server', container_port=8000
+                ),
+                ExposedPort(
+                    name=VSCODE, description='VSCode server', container_port=8001
+                ),
+            ],
+            health_check_path='/health',
+            httpx_client=mock_httpx_client,
+            max_num_sandboxes=3,
+            docker_client=mock_docker_client,
+            privileged=True,
+        )
+
+    @pytest.fixture
+    def service_with_cap_add(
+        self, mock_sandbox_spec_service, mock_httpx_client, mock_docker_client
+    ):
+        """Create DockerSandboxService instance with cap_add set."""
+        return DockerSandboxService(
+            sandbox_spec_service=mock_sandbox_spec_service,
+            container_name_prefix='oh-test-',
+            host_port=3000,
+            container_url_pattern='http://localhost:{port}',
+            mounts=[],
+            exposed_ports=[
+                ExposedPort(
+                    name=AGENT_SERVER, description='Agent server', container_port=8000
+                ),
+                ExposedPort(
+                    name=VSCODE, description='VSCode server', container_port=8001
+                ),
+            ],
+            health_check_path='/health',
+            httpx_client=mock_httpx_client,
+            max_num_sandboxes=3,
+            docker_client=mock_docker_client,
+            cap_add=['SYS_ADMIN', 'NET_ADMIN'],
+        )
+
+    def test_privileged_default_is_false(self):
+        """Test that privileged defaults to False on DockerSandboxServiceInjector."""
+        injector = DockerSandboxServiceInjector()
+        assert injector.privileged is False
+
+    def test_cap_add_default_is_empty(self):
+        """Test that cap_add defaults to empty list on DockerSandboxServiceInjector."""
+        injector = DockerSandboxServiceInjector()
+        assert injector.cap_add == []
+
+    def test_privileged_can_be_enabled(self):
+        """Test that privileged=True can be set on DockerSandboxServiceInjector."""
+        injector = DockerSandboxServiceInjector(privileged=True)
+        assert injector.privileged is True
+
+    def test_cap_add_can_be_set(self):
+        """Test that cap_add can be set to a list of capabilities."""
+        injector = DockerSandboxServiceInjector(cap_add=['SYS_ADMIN', 'NET_ADMIN'])
+        assert injector.cap_add == ['SYS_ADMIN', 'NET_ADMIN']
+
+    def test_privileged_env_var(self):
+        """Test that SANDBOX_PRIVILEGED env var enables privileged mode."""
+        import os
+        from unittest.mock import patch
+
+        for true_value in ['true', 'TRUE', '1', 'yes']:
+            with patch.dict(os.environ, {'SANDBOX_PRIVILEGED': true_value}, clear=True):
+                injector = DockerSandboxServiceInjector()
+                assert injector.privileged is True, f'Failed for value: {true_value}'
+
+    def test_privileged_env_var_defaults_to_false(self):
+        """Test that absent or empty SANDBOX_PRIVILEGED defaults to False."""
+        import os
+        from unittest.mock import patch
+
+        with patch.dict(os.environ, {}, clear=True):
+            injector = DockerSandboxServiceInjector()
+            assert injector.privileged is False
+
+        with patch.dict(os.environ, {'SANDBOX_PRIVILEGED': ''}, clear=True):
+            injector = DockerSandboxServiceInjector()
+            assert injector.privileged is False
+
+    def test_cap_add_env_var(self):
+        """Test that SANDBOX_CAP_ADD env var is parsed as a comma-separated list."""
+        import os
+        from unittest.mock import patch
+
+        with patch.dict(
+            os.environ, {'SANDBOX_CAP_ADD': 'SYS_ADMIN,NET_ADMIN'}, clear=True
+        ):
+            injector = DockerSandboxServiceInjector()
+            assert injector.cap_add == ['SYS_ADMIN', 'NET_ADMIN']
+
+    def test_cap_add_env_var_single_value(self):
+        """Test SANDBOX_CAP_ADD with a single capability."""
+        import os
+        from unittest.mock import patch
+
+        with patch.dict(os.environ, {'SANDBOX_CAP_ADD': 'SYS_PTRACE'}, clear=True):
+            injector = DockerSandboxServiceInjector()
+            assert injector.cap_add == ['SYS_PTRACE']
+
+    def test_cap_add_env_var_empty_defaults_to_empty_list(self):
+        """Test that absent or empty SANDBOX_CAP_ADD defaults to []."""
+        import os
+        from unittest.mock import patch
+
+        with patch.dict(os.environ, {}, clear=True):
+            injector = DockerSandboxServiceInjector()
+            assert injector.cap_add == []
+
+        with patch.dict(os.environ, {'SANDBOX_CAP_ADD': ''}, clear=True):
+            injector = DockerSandboxServiceInjector()
+            assert injector.cap_add == []
+
+    def test_injector_passes_privileged_to_service(
+        self, mock_sandbox_spec_service, mock_httpx_client, mock_docker_client
+    ):
+        """Test that DockerSandboxServiceInjector stores privileged and passes it to DockerSandboxService."""
+        injector = DockerSandboxServiceInjector(privileged=True)
+        assert injector.privileged is True
+        service = DockerSandboxService(
+            sandbox_spec_service=mock_sandbox_spec_service,
+            container_name_prefix=injector.container_name_prefix,
+            host_port=injector.host_port,
+            container_url_pattern=injector.container_url_pattern,
+            mounts=list(injector.mounts),
+            exposed_ports=list(injector.exposed_ports),
+            health_check_path=injector.health_check_path,
+            httpx_client=mock_httpx_client,
+            max_num_sandboxes=injector.max_num_sandboxes,
+            docker_client=mock_docker_client,
+            privileged=injector.privileged,
+            cap_add=list(injector.cap_add),
+        )
+        assert service.privileged is True
+
+    def test_injector_passes_cap_add_to_service(
+        self, mock_sandbox_spec_service, mock_httpx_client, mock_docker_client
+    ):
+        """Test that DockerSandboxServiceInjector stores cap_add and passes it to DockerSandboxService."""
+        injector = DockerSandboxServiceInjector(cap_add=['SYS_ADMIN', 'NET_ADMIN'])
+        assert injector.cap_add == ['SYS_ADMIN', 'NET_ADMIN']
+        service = DockerSandboxService(
+            sandbox_spec_service=mock_sandbox_spec_service,
+            container_name_prefix=injector.container_name_prefix,
+            host_port=injector.host_port,
+            container_url_pattern=injector.container_url_pattern,
+            mounts=list(injector.mounts),
+            exposed_ports=list(injector.exposed_ports),
+            health_check_path=injector.health_check_path,
+            httpx_client=mock_httpx_client,
+            max_num_sandboxes=injector.max_num_sandboxes,
+            docker_client=mock_docker_client,
+            privileged=injector.privileged,
+            cap_add=list(injector.cap_add),
+        )
+        assert service.cap_add == ['SYS_ADMIN', 'NET_ADMIN']
+
+    @patch('openhands.app_server.sandbox.docker_sandbox_service.base62.encodebytes')
+    @patch('os.urandom')
+    async def test_start_sandbox_with_privileged_passes_flag_to_docker(
+        self,
+        mock_urandom,
+        mock_encodebytes,
+        service_with_privileged,
+    ):
+        """Test that start_sandbox passes privileged=True to docker containers.run."""
+        mock_urandom.side_effect = [b'container_id', b'session_key']
+        mock_encodebytes.side_effect = ['test_container_id', 'test_session_key']
+
+        mock_container = MagicMock()
+        mock_container.name = 'oh-test-test_container_id'
+        mock_container.status = 'running'
+        mock_container.image.tags = ['test-image:latest']
+        mock_container.attrs = {
+            'Created': '2024-01-15T10:30:00.000000000Z',
+            'Config': {
+                'Env': ['OH_SESSION_API_KEYS_0=test_session_key'],
+                'WorkingDir': '/workspace',
+            },
+            'NetworkSettings': {
+                'Ports': {
+                    '8000/tcp': [{'HostPort': '12345'}],
+                    '8001/tcp': [{'HostPort': '12346'}],
+                }
+            },
+        }
+        service_with_privileged.docker_client.containers.run.return_value = (
+            mock_container
+        )
+
+        with patch.object(
+            service_with_privileged, 'pause_old_sandboxes', return_value=[]
+        ):
+            result = await service_with_privileged.start_sandbox()
+
+        assert result is not None
+        call_args = service_with_privileged.docker_client.containers.run.call_args
+        assert call_args[1]['privileged'] is True
+
+    @patch('openhands.app_server.sandbox.docker_sandbox_service.base62.encodebytes')
+    @patch('os.urandom')
+    async def test_start_sandbox_without_privileged_omits_flag(
+        self,
+        mock_urandom,
+        mock_encodebytes,
+        service,
+    ):
+        """Test that start_sandbox passes privileged=None (omitted) when privileged=False."""
+        mock_urandom.side_effect = [b'container_id', b'session_key']
+        mock_encodebytes.side_effect = ['test_container_id', 'test_session_key']
+
+        mock_container = MagicMock()
+        mock_container.name = 'oh-test-test_container_id'
+        mock_container.status = 'running'
+        mock_container.image.tags = ['test-image:latest']
+        mock_container.attrs = {
+            'Created': '2024-01-15T10:30:00.000000000Z',
+            'Config': {
+                'Env': ['OH_SESSION_API_KEYS_0=test_session_key'],
+                'WorkingDir': '/workspace',
+            },
+            'NetworkSettings': {
+                'Ports': {
+                    '8000/tcp': [{'HostPort': '12345'}],
+                    '8001/tcp': [{'HostPort': '12346'}],
+                }
+            },
+        }
+        service.docker_client.containers.run.return_value = mock_container
+
+        with patch.object(service, 'pause_old_sandboxes', return_value=[]):
+            await service.start_sandbox()
+
+        call_args = service.docker_client.containers.run.call_args
+        assert call_args[1]['privileged'] is None
+
+    @patch('openhands.app_server.sandbox.docker_sandbox_service.base62.encodebytes')
+    @patch('os.urandom')
+    async def test_start_sandbox_with_cap_add_passes_list_to_docker(
+        self,
+        mock_urandom,
+        mock_encodebytes,
+        service_with_cap_add,
+    ):
+        """Test that start_sandbox passes cap_add list to docker containers.run."""
+        mock_urandom.side_effect = [b'container_id', b'session_key']
+        mock_encodebytes.side_effect = ['test_container_id', 'test_session_key']
+
+        mock_container = MagicMock()
+        mock_container.name = 'oh-test-test_container_id'
+        mock_container.status = 'running'
+        mock_container.image.tags = ['test-image:latest']
+        mock_container.attrs = {
+            'Created': '2024-01-15T10:30:00.000000000Z',
+            'Config': {
+                'Env': ['OH_SESSION_API_KEYS_0=test_session_key'],
+                'WorkingDir': '/workspace',
+            },
+            'NetworkSettings': {
+                'Ports': {
+                    '8000/tcp': [{'HostPort': '12345'}],
+                    '8001/tcp': [{'HostPort': '12346'}],
+                }
+            },
+        }
+        service_with_cap_add.docker_client.containers.run.return_value = mock_container
+
+        with patch.object(service_with_cap_add, 'pause_old_sandboxes', return_value=[]):
+            await service_with_cap_add.start_sandbox()
+
+        call_args = service_with_cap_add.docker_client.containers.run.call_args
+        assert call_args[1]['cap_add'] == ['SYS_ADMIN', 'NET_ADMIN']
+
+    @patch('openhands.app_server.sandbox.docker_sandbox_service.base62.encodebytes')
+    @patch('os.urandom')
+    async def test_start_sandbox_without_cap_add_omits_arg(
+        self,
+        mock_urandom,
+        mock_encodebytes,
+        service,
+    ):
+        """Test that start_sandbox passes cap_add=None when cap_add is empty."""
+        mock_urandom.side_effect = [b'container_id', b'session_key']
+        mock_encodebytes.side_effect = ['test_container_id', 'test_session_key']
+
+        mock_container = MagicMock()
+        mock_container.name = 'oh-test-test_container_id'
+        mock_container.status = 'running'
+        mock_container.image.tags = ['test-image:latest']
+        mock_container.attrs = {
+            'Created': '2024-01-15T10:30:00.000000000Z',
+            'Config': {
+                'Env': ['OH_SESSION_API_KEYS_0=test_session_key'],
+                'WorkingDir': '/workspace',
+            },
+            'NetworkSettings': {
+                'Ports': {
+                    '8000/tcp': [{'HostPort': '12345'}],
+                    '8001/tcp': [{'HostPort': '12346'}],
+                }
+            },
+        }
+        service.docker_client.containers.run.return_value = mock_container
+
+        with patch.object(service, 'pause_old_sandboxes', return_value=[]):
+            await service.start_sandbox()
+
+        call_args = service.docker_client.containers.run.call_args
+        assert call_args[1]['cap_add'] is None
+
+    @patch('openhands.app_server.sandbox.docker_sandbox_service._logger')
+    async def test_start_sandbox_privileged_logs_info(
+        self, mock_logger, service_with_privileged
+    ):
+        """Test that starting in privileged mode logs an info message."""
+        mock_container = MagicMock()
+        mock_container.name = 'oh-test-abc123'
+        mock_container.status = 'running'
+        mock_container.image.tags = ['test-image:latest']
+        mock_container.attrs = {
+            'Created': '2024-01-15T10:30:00.000000000Z',
+            'Config': {
+                'Env': ['OH_SESSION_API_KEYS_0=test_session_key'],
+                'WorkingDir': '/workspace',
+            },
+            'NetworkSettings': {
+                'Ports': {
+                    '8000/tcp': [{'HostPort': '12345'}],
+                    '8001/tcp': [{'HostPort': '12346'}],
+                }
+            },
+        }
+        service_with_privileged.docker_client.containers.run.return_value = (
+            mock_container
+        )
+
+        with patch.object(
+            service_with_privileged, 'pause_old_sandboxes', return_value=[]
+        ):
+            await service_with_privileged.start_sandbox()
+
+        info_calls = [str(c) for c in mock_logger.info.call_args_list]
+        assert any('privileged' in call.lower() for call in info_calls)
+
+    @patch('openhands.app_server.sandbox.docker_sandbox_service._logger')
+    async def test_start_sandbox_cap_add_logs_capabilities(
+        self, mock_logger, service_with_cap_add
+    ):
+        """Test that starting with cap_add logs the capabilities being added."""
+        mock_container = MagicMock()
+        mock_container.name = 'oh-test-abc123'
+        mock_container.status = 'running'
+        mock_container.image.tags = ['test-image:latest']
+        mock_container.attrs = {
+            'Created': '2024-01-15T10:30:00.000000000Z',
+            'Config': {
+                'Env': ['OH_SESSION_API_KEYS_0=test_session_key'],
+                'WorkingDir': '/workspace',
+            },
+            'NetworkSettings': {
+                'Ports': {
+                    '8000/tcp': [{'HostPort': '12345'}],
+                    '8001/tcp': [{'HostPort': '12346'}],
+                }
+            },
+        }
+        service_with_cap_add.docker_client.containers.run.return_value = mock_container
+
+        with patch.object(service_with_cap_add, 'pause_old_sandboxes', return_value=[]):
+            await service_with_cap_add.start_sandbox()
+
+        info_calls = [str(c) for c in mock_logger.info.call_args_list]
+        assert any('SYS_ADMIN' in call for call in info_calls)

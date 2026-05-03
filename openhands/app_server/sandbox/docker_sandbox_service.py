@@ -57,6 +57,20 @@ def _get_kvm_enabled_default() -> bool:
     return value.lower() in ('true', '1', 'yes')
 
 
+def _get_privileged_default() -> bool:
+    """Get the default value for privileged from environment variables."""
+    value = os.getenv('SANDBOX_PRIVILEGED', '')
+    return value.lower() in ('true', '1', 'yes')
+
+
+def _get_cap_add_default() -> list[str]:
+    """Get the default cap_add list from SANDBOX_CAP_ADD (comma-separated)."""
+    value = os.getenv('SANDBOX_CAP_ADD', '')
+    if not value:
+        return []
+    return [cap.strip() for cap in value.split(',') if cap.strip()]
+
+
 class VolumeMount(BaseModel):
     """Mounted volume within the container."""
 
@@ -101,6 +115,8 @@ class DockerSandboxService(SandboxService):
     startup_grace_seconds: int = STARTUP_GRACE_SECONDS
     use_host_network: bool = False
     kvm_enabled: bool = False
+    privileged: bool = False
+    cap_add: list[str] = field(default_factory=list)
 
     def _docker_status_to_sandbox_status(self, docker_status: str) -> SandboxStatus:
         """Convert Docker container status to SandboxStatus."""
@@ -509,6 +525,16 @@ class DockerSandboxService(SandboxService):
                 'Starting sandbox %s with KVM device passthrough', container_name
             )
 
+        if self.privileged:
+            _logger.info('Starting sandbox %s in privileged mode', container_name)
+
+        if self.cap_add:
+            _logger.info(
+                'Starting sandbox %s with capabilities: %s',
+                container_name,
+                ', '.join(self.cap_add),
+            )
+
         try:
             # Create and start the container
             container = self.docker_client.containers.run(  # type: ignore[call-overload,misc]
@@ -535,6 +561,10 @@ class DockerSandboxService(SandboxService):
                 network_mode=network_mode,
                 # Device passthrough for KVM hardware virtualization
                 devices=devices,
+                # Privileged mode: grants all Linux capabilities to the container
+                privileged=self.privileged if self.privileged else None,
+                # Additional Linux capabilities (fine-grained alternative to privileged)
+                cap_add=self.cap_add if self.cap_add else None,
             )
 
             sandbox_info = await self._container_to_sandbox_info(container)
@@ -756,6 +786,27 @@ class DockerSandboxServiceInjector(SandboxServiceInjector):
             'Configure via SANDBOX_KVM_ENABLED environment variable.'
         ),
     )
+    privileged: bool = Field(
+        default_factory=_get_privileged_default,
+        description=(
+            'Whether to run sandbox containers in privileged mode, granting all '
+            'Linux capabilities. This enables full OS-level operations inside the '
+            'sandbox such as mounting filesystems, managing network namespaces, '
+            'and running nested containers. Use with caution — privileged mode '
+            'removes most Docker security isolation. '
+            'Configure via SANDBOX_PRIVILEGED environment variable.'
+        ),
+    )
+    cap_add: list[str] = Field(
+        default_factory=_get_cap_add_default,
+        description=(
+            'List of Linux capabilities to add to sandbox containers. Provides '
+            'fine-grained privilege escalation without full privileged mode. '
+            'Common values: SYS_ADMIN, NET_ADMIN, SYS_PTRACE, NET_RAW. '
+            'Configure via SANDBOX_CAP_ADD environment variable (comma-separated, '
+            'e.g. "SYS_ADMIN,NET_ADMIN").'
+        ),
+    )
 
     @model_validator(mode='after')
     def _validate_container_url_pattern(self) -> 'DockerSandboxServiceInjector':
@@ -812,4 +863,6 @@ class DockerSandboxServiceInjector(SandboxServiceInjector):
                 startup_grace_seconds=self.startup_grace_seconds,
                 use_host_network=self.use_host_network,
                 kvm_enabled=self.kvm_enabled,
+                privileged=self.privileged,
+                cap_add=list(self.cap_add),
             )

@@ -249,7 +249,14 @@ def get_supported_llm_models(
                     ollama_url, timeout=ollama_timeout
                 ).json()['models']  # noqa: ASYNC100
                 for model in ollama_models_list:
-                    model_list.append('ollama/' + model['name'])
+                    bare_name = model['name']
+                    # Normalize registry URL forms to bare model name:
+                    # registry.ollama.ai/library/deepseek-r1:14b → deepseek-r1:14b
+                    if 'registry.ollama.ai/library/' in bare_name:
+                        bare_name = bare_name.split('/library/', 1)[1]
+                    elif bare_name.startswith('library/'):
+                        bare_name = bare_name[len('library/'):]
+                    model_list.append('ollama/' + bare_name)
                 break
             except httpx.HTTPError as e:
                 logger.error(f'Error getting OLLAMA models: {e}')
