@@ -166,7 +166,9 @@ def _model_supports_reasoning(model: str) -> bool:
     return any(fnmatchcase(basename, pat) for pat in _REASONING_EFFORT_PATTERNS)
 
 
-def _model_native_tool_calling_reliable(model: str) -> bool:
+def _model_native_tool_calling_reliable(
+    model: str, base_url: str | None = None
+) -> bool:
     """Return True if the model reliably supports native tool calling.
 
     For providers/models where native tool calling is known to be unreliable
@@ -183,6 +185,10 @@ def _model_native_tool_calling_reliable(model: str) -> bool:
     # This covers both the standard 'ollama/' prefix and registry-URL forms
     # like 'registry.ollama.ai/library/deepseek-r1:14b'.
     if raw.startswith('ollama/') or 'registry.ollama.ai/' in raw:
+        return False
+    # Bare model names (e.g. "deepseek-r1:14b") without the "ollama/" prefix
+    # but pointed at Ollama's default port 11434 are also unreliable.
+    if base_url and urlparse(base_url).port == 11434:
         return False
     return True
 
@@ -1173,7 +1179,7 @@ class LiveStatusAppConversationService(AppConversationServiceBase):
         # models), disable native_tool_calling so the SDK uses prompted
         # function calling. Otherwise the LLM may emit tool calls as raw
         # JSON inside the assistant message and they will never execute.
-        if not _model_native_tool_calling_reliable(model):
+        if not _model_native_tool_calling_reliable(model, base_url=base_url):
             llm_kwargs['native_tool_calling'] = False
 
         return LLM(**llm_kwargs)

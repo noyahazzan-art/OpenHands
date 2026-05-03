@@ -9,18 +9,13 @@ from unittest.mock import AsyncMock, Mock, patch
 from uuid import uuid4
 
 import pytest
+from pydantic import SecretStr
+
 from openhands.agent_server.models import (
     SendMessageRequest,
     StartConversationRequest,
     TextContent,
 )
-from openhands.sdk import Agent, Event
-from openhands.sdk.llm import LLM
-from openhands.sdk.secret import LookupSecret, StaticSecret
-from openhands.sdk.workspace import LocalWorkspace
-from openhands.sdk.workspace.remote.async_remote_workspace import AsyncRemoteWorkspace
-from pydantic import SecretStr
-
 from openhands.app_server.app_conversation.app_conversation_models import (
     AgentType,
     AppConversationInfo,
@@ -44,6 +39,11 @@ from openhands.app_server.sandbox.sandbox_spec_models import SandboxSpecInfo
 from openhands.app_server.user.user_context import UserContext
 from openhands.integrations.provider import ProviderToken, ProviderType
 from openhands.integrations.service_types import SuggestedTask, TaskType
+from openhands.sdk import Agent, Event
+from openhands.sdk.llm import LLM
+from openhands.sdk.secret import LookupSecret, StaticSecret
+from openhands.sdk.workspace import LocalWorkspace
+from openhands.sdk.workspace.remote.async_remote_workspace import AsyncRemoteWorkspace
 from openhands.server.types import AppMode
 from openhands.storage.data_models.conversation_metadata import ConversationTrigger
 from openhands.storage.data_models.settings import SandboxGroupingStrategy
@@ -2651,7 +2651,6 @@ class TestPluginHandling:
     def test_construct_initial_message_with_plugin_params_no_params(self):
         """Test _construct_initial_message_with_plugin_params with plugins but no parameters."""
         from openhands.agent_server.models import SendMessageRequest, TextContent
-
         from openhands.app_server.app_conversation.app_conversation_models import (
             PluginSpec,
         )
@@ -2675,7 +2674,6 @@ class TestPluginHandling:
     def test_construct_initial_message_with_plugin_params_creates_new_message(self):
         """Test _construct_initial_message_with_plugin_params creates message when no initial message."""
         from openhands.agent_server.models import TextContent
-
         from openhands.app_server.app_conversation.app_conversation_models import (
             PluginSpec,
         )
@@ -2702,7 +2700,6 @@ class TestPluginHandling:
     def test_construct_initial_message_with_plugin_params_appends_to_message(self):
         """Test _construct_initial_message_with_plugin_params appends to existing message."""
         from openhands.agent_server.models import SendMessageRequest, TextContent
-
         from openhands.app_server.app_conversation.app_conversation_models import (
             PluginSpec,
         )
@@ -2735,7 +2732,6 @@ class TestPluginHandling:
     def test_construct_initial_message_with_plugin_params_preserves_role(self):
         """Test _construct_initial_message_with_plugin_params preserves message role."""
         from openhands.agent_server.models import SendMessageRequest, TextContent
-
         from openhands.app_server.app_conversation.app_conversation_models import (
             PluginSpec,
         )
@@ -2756,7 +2752,6 @@ class TestPluginHandling:
     def test_construct_initial_message_with_plugin_params_empty_content(self):
         """Test _construct_initial_message_with_plugin_params handles empty content list."""
         from openhands.agent_server.models import SendMessageRequest, TextContent
-
         from openhands.app_server.app_conversation.app_conversation_models import (
             PluginSpec,
         )
@@ -2776,7 +2771,6 @@ class TestPluginHandling:
     def test_construct_initial_message_with_multiple_plugins(self):
         """Test _construct_initial_message_with_plugin_params handles multiple plugins."""
         from openhands.agent_server.models import TextContent
-
         from openhands.app_server.app_conversation.app_conversation_models import (
             PluginSpec,
         )
@@ -3780,3 +3774,26 @@ class TestModelNativeToolCallingReliable:
     )
     def test_model_native_tool_calling_reliable(self, model, expected):
         assert _model_native_tool_calling_reliable(model) is expected
+
+    @pytest.mark.parametrize(
+        'model,llm_base_url,expected',
+        [
+            # Bare model name on Ollama default port - unreliable
+            ('deepseek-r1:14b', 'http://localhost:11434', False),
+            ('qwen2.5-coder:7b', 'http://192.168.1.50:11434', False),
+            ('llama3.2:3b', 'http://host.docker.internal:11434', False),
+            # Any model on port 11434 should be treated as Ollama
+            ('gpt-4o', 'http://localhost:11434', False),
+            # Same bare name on a different port - reliable (e.g. LM Studio)
+            ('deepseek-r1:14b', 'http://localhost:1234', True),
+            # No llm_base_url - cannot infer Ollama, assume reliable
+            ('deepseek-r1:14b', None, True),
+        ],
+    )
+    def test_model_native_tool_calling_reliable_with_base_url(
+        self, model, llm_base_url, expected
+    ):
+        assert (
+            _model_native_tool_calling_reliable(model, base_url=llm_base_url)
+            is expected
+        )
