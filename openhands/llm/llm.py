@@ -12,6 +12,7 @@ import time
 import warnings
 from functools import partial
 from typing import Any, Callable, cast
+from urllib.parse import urlparse
 
 import httpx
 
@@ -251,6 +252,21 @@ class LLM(RetryMixin, DebugMixin):
                 dict[str, Any] | Message | list[dict[str, Any]] | list[Message]
             ) = []
             mock_function_calling = not self.is_function_calling_active()
+
+            # Final safety net for Ollama-like endpoints: always mock tool calling
+            # so we never forward raw `tools` to providers/models that reject them.
+            model_raw = (self.config.model or '').strip().lower()
+            base_url = self.config.base_url
+            is_ollama_like = (
+                model_raw.startswith('ollama/') or 'registry.ollama.ai/' in model_raw
+            )
+            if not is_ollama_like and base_url:
+                parsed = urlparse(base_url)
+                host = (parsed.hostname or '').lower()
+                is_ollama_like = parsed.port == 11434 or 'ollama' in host
+
+            if is_ollama_like:
+                mock_function_calling = True
 
             # some callers might send the model and messages directly
             # litellm allows positional args, like completion(model, messages, **kwargs)
