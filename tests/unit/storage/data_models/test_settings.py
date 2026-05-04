@@ -127,3 +127,15 @@ def test_settings_no_pydantic_frozen_field_warning():
         assert len(frozen_warnings) == 0, (
             f'Pydantic frozen field warnings found: {[str(w.message) for w in frozen_warnings]}'
         )
+
+
+def test_settings_normalizes_registry_ollama_model_name():
+    settings = Settings(llm_model='registry.ollama.ai/library/deepseek-r1:14b')
+    assert settings.llm_model == 'ollama/deepseek-r1:14b'
+
+
+def test_settings_normalizes_prefixed_registry_ollama_model_name():
+    settings = Settings(
+        llm_model='ollama/registry.ollama.ai/library/deepseek-r1:14b'
+    )
+    assert settings.llm_model == 'ollama/deepseek-r1:14b'

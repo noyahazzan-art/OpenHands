@@ -20,6 +20,22 @@ from openhands.core.config.utils import load_openhands_config
 from openhands.storage.data_models.secrets import Secrets
 
 
+def _normalize_ollama_model_name(model: str | None) -> str | None:
+    if not model:
+        return model
+    if 'registry.ollama.ai/library/' in model:
+        return 'ollama/' + model.split('/library/', 1)[1]
+    if model.startswith('library/'):
+        return 'ollama/' + model[len('library/') :]
+    if model.startswith('ollama/'):
+        tail = model[len('ollama/') :]
+        if 'registry.ollama.ai/library/' in tail:
+            return 'ollama/' + tail.split('/library/', 1)[1]
+        if tail.startswith('library/'):
+            return 'ollama/' + tail[len('library/') :]
+    return model
+
+
 class SandboxGroupingStrategy(str, Enum):
     """Strategy for grouping conversations within sandboxes."""
 
@@ -136,6 +152,11 @@ class Settings(BaseModel):
             )
         data['secret_store'] = secret_store
         return data
+
+    @field_validator('llm_model')
+    @classmethod
+    def normalize_llm_model(cls, v: str | None) -> str | None:
+        return _normalize_ollama_model_name(v)
 
     @field_validator('condenser_max_size')
     @classmethod
