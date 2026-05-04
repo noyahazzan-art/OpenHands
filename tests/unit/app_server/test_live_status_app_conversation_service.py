@@ -26,6 +26,7 @@ from openhands.app_server.app_conversation.live_status_app_conversation_service 
     LiveStatusAppConversationService,
     _is_volatile_ollama_container_url,
     _model_native_tool_calling_reliable,
+    _normalize_ollama_model_name,
     _rewrite_volatile_ollama_url,
 )
 from openhands.app_server.sandbox.sandbox_models import (
@@ -3797,3 +3798,37 @@ class TestModelNativeToolCallingReliable:
             _model_native_tool_calling_reliable(model, base_url=llm_base_url)
             is expected
         )
+
+
+class TestNormalizeOllamaModelName:
+    """Tests for _normalize_ollama_model_name."""
+
+    @pytest.mark.parametrize(
+        'model,expected',
+        [
+            # Already-normalised names are unchanged
+            ('ollama/deepseek-r1:14b', 'ollama/deepseek-r1:14b'),
+            ('ollama/qwen2.5-coder:7b', 'ollama/qwen2.5-coder:7b'),
+            # Registry URL with ollama/ prefix -- should be stripped
+            (
+                'ollama/registry.ollama.ai/library/deepseek-r1:14b',
+                'ollama/deepseek-r1:14b',
+            ),
+            (
+                'ollama/registry.ollama.ai/library/llama3.2:3b',
+                'ollama/llama3.2:3b',
+            ),
+            # library/ prefix without full registry URL
+            ('ollama/library/deepseek-r1:14b', 'ollama/deepseek-r1:14b'),
+            # Non-ollama models are unchanged
+            ('anthropic/claude-3-5-sonnet-20241022', 'anthropic/claude-3-5-sonnet-20241022'),
+            ('openai/gpt-4o', 'openai/gpt-4o'),
+            # Bare registry URL (no ollama/ prefix) is unchanged
+            ('registry.ollama.ai/library/deepseek-r1:14b', 'registry.ollama.ai/library/deepseek-r1:14b'),
+            # Edge cases
+            ('', ''),
+            (None, None),
+        ],
+    )
+    def test_normalize_ollama_model_name(self, model, expected):
+        assert _normalize_ollama_model_name(model) == expected

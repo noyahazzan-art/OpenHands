@@ -166,6 +166,33 @@ def _model_supports_reasoning(model: str) -> bool:
     return any(fnmatchcase(basename, pat) for pat in _REASONING_EFFORT_PATTERNS)
 
 
+def _normalize_ollama_model_name(model: str) -> str:
+    """Strip Ollama registry URL prefix from a stored model name.
+
+    When Ollama is queried for available models it may return names in
+    registry URL form e.g. "registry.ollama.ai/library/deepseek-r1:14b".
+    The frontend normalises these before they appear in the dropdown, but
+    users who selected a model before that fix may have
+    "ollama/registry.ollama.ai/library/deepseek-r1:14b" saved in their
+    settings.  Older Ollama instances do not recognise the full registry
+    path as a local model identifier, so we strip the redundant prefix so
+    that litellm ultimately sends the bare model name (e.g.
+    "deepseek-r1:14b") to the Ollama API.
+    """
+    if not model:
+        return model
+    _OLLAMA_PREFIX = 'ollama/'
+    if model.startswith(_OLLAMA_PREFIX):
+        tail = model[len(_OLLAMA_PREFIX):]
+        if 'registry.ollama.ai/library/' in tail:
+            bare = tail.split('/library/', 1)[1]
+            return _OLLAMA_PREFIX + bare
+        if tail.startswith('library/'):
+            bare = tail[len('library/'):]
+            return _OLLAMA_PREFIX + bare
+    return model
+
+
 def _model_native_tool_calling_reliable(
     model: str, base_url: str | None = None
 ) -> bool:
@@ -1157,6 +1184,12 @@ class LiveStatusAppConversationService(AppConversationServiceBase):
             model.startswith('openhands/') or model.startswith('litellm_proxy/')
         ):
             base_url = user.llm_base_url or self.openhands_provider_base_url
+
+        # Normalise any stale registry-URL Ollama model names saved in user
+        # settings (e.g. "ollama/registry.ollama.ai/library/deepseek-r1:14b"
+        # -> "ollama/deepseek-r1:14b") so that litellm always sends the bare
+        # model identifier to the Ollama API.
+        model = _normalize_ollama_model_name(model)
 
         llm_kwargs: dict[str, Any] = {
             'model': model,
