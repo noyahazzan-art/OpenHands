@@ -112,6 +112,7 @@ from openhands.storage.settings.settings_store import SettingsStore
 from openhands.utils.async_utils import wait_all
 from openhands.utils.conversation_summary import get_default_conversation_title
 from openhands.utils.environment import get_effective_llm_base_url
+from openhands.utils.utils import _is_probably_ollama_model, _normalize_ollama_model_name
 
 app = APIRouter(prefix='/api', dependencies=get_dependencies())
 app_conversation_service_dependency = depends_app_conversation_service()
@@ -736,15 +737,18 @@ async def get_prompt(
         raise ValueError('Settings not found')
 
     settings_base_url = settings.llm_base_url
+    normalized_model = _normalize_ollama_model_name(settings.llm_model or '')
     effective_base_url = get_effective_llm_base_url(
-        settings.llm_model,
+        normalized_model,
         settings_base_url,
     )
     llm_config = LLMConfig(
-        model=settings.llm_model or '',
+        model=normalized_model,
         api_key=settings.llm_api_key,
         base_url=effective_base_url,
     )
+    if _is_probably_ollama_model(normalized_model, effective_base_url):
+        llm_config.native_tool_calling = False
 
     prompt_template = generate_prompt_template(stringified_events)
     prompt = await generate_prompt(llm_config, prompt_template, conversation_id)

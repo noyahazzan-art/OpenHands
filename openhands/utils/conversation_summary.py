@@ -11,6 +11,7 @@ from openhands.llm.llm_registry import LLMRegistry
 from openhands.storage.data_models.settings import Settings
 from openhands.storage.files import FileStore
 from openhands.utils.environment import get_effective_llm_base_url
+from openhands.utils.utils import _is_probably_ollama_model, _normalize_ollama_model_name
 
 
 async def generate_conversation_title(
@@ -114,17 +115,20 @@ async def auto_generate_title(
             # Get LLM config from user settings
             try:
                 if settings and settings.llm_model:
-                    # Create LLM config from settings
+                    # Create LLM config from settings, normalizing Ollama model names
+                    normalized_model = _normalize_ollama_model_name(settings.llm_model)
                     settings_base_url = settings.llm_base_url
                     effective_base_url = get_effective_llm_base_url(
-                        settings.llm_model,
+                        normalized_model,
                         settings_base_url,
                     )
                     llm_config = LLMConfig(
-                        model=settings.llm_model,
+                        model=normalized_model,
                         api_key=settings.llm_api_key,
                         base_url=effective_base_url,
                     )
+                    if _is_probably_ollama_model(normalized_model, effective_base_url):
+                        llm_config.native_tool_calling = False
 
                     # Try to generate title using LLM
                     llm_title = await generate_conversation_title(
