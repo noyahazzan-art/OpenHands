@@ -19,7 +19,11 @@ from storage.saas_settings_store import SaasSettingsStore
 from openhands.core.config import LLMConfig
 from openhands.core.logger import openhands_logger as logger
 from openhands.utils.async_utils import call_sync_from_async
-from openhands.utils.utils import create_registry_and_conversation_stats
+from openhands.utils.utils import (
+    _is_probably_ollama_model,
+    _normalize_ollama_model_name,
+    create_registry_and_conversation_stats,
+)
 
 
 def fetch_github_issue_context(
@@ -112,11 +116,14 @@ async def summarize_issue_solvability(
         )
 
     try:
+        normalized_model = _normalize_ollama_model_name(user_settings.llm_model)
         llm_config = LLMConfig(
-            model=user_settings.llm_model,
+            model=normalized_model,
             api_key=user_settings.llm_api_key.get_secret_value(),
             base_url=user_settings.llm_base_url,
         )
+        if _is_probably_ollama_model(normalized_model, user_settings.llm_base_url):
+            llm_config.native_tool_calling = False
     except ValidationError as e:
         raise ValueError(
             f'[Solvability] Invalid LLM configuration for user {github_view.user_info.user_id}: {str(e)}'
