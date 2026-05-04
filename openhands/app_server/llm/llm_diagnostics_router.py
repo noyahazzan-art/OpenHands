@@ -10,6 +10,7 @@ from fastapi import APIRouter, Depends
 from openhands.app_server.utils.dependencies import get_dependencies
 from openhands.core.config import load_openhands_config
 from openhands.core.config.llm_config import LLMConfig
+from openhands.utils.utils import _normalize_ollama_model_name
 from openhands.server.user_auth import get_user_settings
 from openhands.storage.data_models.settings import Settings
 
@@ -179,8 +180,9 @@ async def llm_health_check(
 
         # If model is set in settings, use that
         if settings.llm_model:
+            normalized_model = _normalize_ollama_model_name(settings.llm_model)
             llm_config = LLMConfig(
-                model=settings.llm_model,
+                model=normalized_model,
                 api_key=settings.llm_api_key,
                 base_url=settings.llm_base_url or llm_config.base_url,
                 custom_llm_provider=llm_config.custom_llm_provider,

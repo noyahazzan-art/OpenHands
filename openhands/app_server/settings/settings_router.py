@@ -29,6 +29,7 @@ from openhands.storage.data_models.settings import Settings
 from openhands.storage.secrets.secrets_store import SecretsStore
 from openhands.storage.settings.settings_store import SettingsStore
 from openhands.utils.llm import is_openhands_model
+from openhands.utils.utils import _normalize_ollama_model_name
 
 LITE_LLM_API_URL = os.environ.get(
     'LITE_LLM_API_URL', 'https://llm-proxy.app.all-hands.dev'
@@ -52,6 +53,8 @@ async def store_llm_settings(
     # Preserve unset LLM settings
     settings.llm_api_key = settings.llm_api_key or existing_settings.llm_api_key
     settings.llm_model = settings.llm_model or existing_settings.llm_model
+    if settings.llm_model:
+        settings.llm_model = _normalize_ollama_model_name(settings.llm_model)
 
     if settings.llm_base_url is None:
         # Not provided at all (e.g. MCP config save) - preserve existing or auto-detect
